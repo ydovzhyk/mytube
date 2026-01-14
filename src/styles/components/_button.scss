@@ -1,0 +1,88 @@
+@use 'sass:color';
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.button {
+  @include button-base;
+  padding: $spacing-2 $spacing-4;
+  border-radius: $radius-md;
+  font-size: $text-sm;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-2;
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: currentColor;
+    flex: 0 0 auto;
+  }
+
+  &__text {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &--sm {
+    padding: $spacing-1 $spacing-3;
+    font-size: $text-xs;
+  }
+
+  &--lg {
+    padding: $spacing-3 $spacing-6;
+    font-size: $text-base;
+  }
+
+  &--primary {
+    @include button-primary;
+  }
+
+  &--secondary {
+    @include button-secondary;
+  }
+
+  &--ghost {
+    @include button-ghost;
+  }
+
+  &--danger {
+    @include button-base;
+    background: $error;
+    color: $text-primary;
+
+    &:hover:not(:disabled) {
+      background: color.adjust($error, $lightness: -10%);
+    }
+  }
+
+  &--icon {
+    padding: $spacing-2;
+    border-radius: $radius-full;
+
+    &.button--sm {
+      padding: $spacing-1;
+    }
+
+    &.button--lg {
+      padding: $spacing-3;
+    }
+  }
+
+  &--loading {
+    pointer-events: none;
+
+    .button__spinner {
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  &--full {
+    width: 100%;
+  }
+}
+
+

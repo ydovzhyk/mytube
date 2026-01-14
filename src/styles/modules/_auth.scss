@@ -1,0 +1,106 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.auth-card {
+  @include card;
+  width: 100%;
+  max-width: 420px;
+  padding: $spacing-8;
+  position: relative;
+  z-index: 1;
+
+  &__header {
+    text-align: center;
+    margin-bottom: $spacing-8;
+  }
+
+  &__logo {
+    @include flex-center;
+    gap: $spacing-2;
+    font-size: $text-2xl;
+    font-weight: $font-bold;
+    color: $text-primary;
+    margin-bottom: $spacing-4;
+
+    svg {
+      color: $primary;
+    }
+  }
+
+  &__title {
+    font-size: $text-xl;
+    font-weight: $font-semibold;
+    margin-bottom: $spacing-2;
+  }
+
+  &__subtitle {
+    color: $text-secondary;
+    font-size: $text-sm;
+  }
+
+  &__form {
+    @include flex-column;
+    gap: $spacing-4;
+  }
+
+  &__oauth {
+    margin-bottom: $spacing-5;
+
+    .button {
+      height: 40px;
+      border-radius: $radius-md;
+    }
+  }
+
+  /* ===== Divider (or) ===== */
+  &__divider {
+    @include flex-center;
+    gap: $spacing-3;
+    margin: $spacing-4 0 0;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: $border-default;
+    }
+
+    span {
+      color: $text-muted;
+      font-size: $text-xs;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  &__recaptcha {
+    @include flex-center;
+    margin: $spacing-4 0;
+  }
+
+  &__footer {
+    text-align: center;
+    margin-top: $spacing-6;
+    padding-top: $spacing-6;
+    border-top: 1px solid $border-default;
+    font-size: $text-sm;
+    color: $text-secondary;
+
+    a {
+      color: $primary;
+      font-weight: $font-medium;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+.auth-card button[type='submit'] {
+  height: 40px;
+  border-radius: $radius-md;
+}
+
+

@@ -1,0 +1,242 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: $header-height;
+  background: rgba($bg-primary, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid $border-default;
+  z-index: $z-fixed;
+
+  &__container {
+    @include flex-between;
+    height: 100%;
+    padding: 0 $spacing-4;
+    max-width: none;
+  }
+
+  &__left {
+    @include flex-start;
+    gap: $spacing-4;
+  }
+
+  &__menu-btn {
+    @include button-ghost;
+    padding: $spacing-2;
+    border-radius: $radius-full;
+    font-size: $text-xl;
+  }
+
+  &__logo {
+    @include flex-start;
+    gap: $spacing-2;
+    font-size: $text-xl;
+    font-weight: $font-bold;
+    color: $text-primary;
+
+    &-icon {
+      color: $primary;
+      font-size: $text-2xl;
+    }
+  }
+
+  &__center {
+    flex: 1;
+    max-width: 600px;
+    margin: 0 $spacing-4;
+    display: block;
+
+    @include md {
+      margin: 0 $spacing-8;
+    }
+  }
+
+  &__search {
+    width: 100%;
+  }
+
+  &__right {
+    @include flex-start;
+    gap: $spacing-2;
+  }
+
+  &__action {
+    @include button-ghost;
+    padding: $spacing-2;
+    border-radius: $radius-full;
+    font-size: $text-xl;
+    position: relative;
+
+    &--mobile {
+      @include md {
+        display: none;
+      }
+    }
+  }
+
+  &__notification-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    background: $error;
+    border-radius: $radius-full;
+  }
+
+  &__profile {
+    cursor: pointer;
+    transition: opacity $transition-fast;
+    border-radius: $radius-full;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  &__auth-btn {
+    @include button-primary;
+    padding: $spacing-2 $spacing-4;
+    border-radius: $radius-full;
+    font-size: $text-sm;
+  }
+
+  /* ===== Auth links (login / register) — unified with sidebar ===== */
+
+  &__auth-links {
+    @include flex-start;
+    gap: $spacing-0;
+    padding: 0;
+  }
+
+  &__auth-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    color: $text-secondary;
+
+    svg {
+      display: block;
+      opacity: 0.7;
+    }
+  }
+
+  &__text-link {
+    @include flex-start;
+    gap: $spacing-2;
+
+    padding: $spacing-2 $spacing-3;
+    border-radius: $radius-md;
+    background: none;
+    border: none;
+
+    color: $text-secondary;
+    font-size: $text-sm;
+    font-weight: $font-normal;
+    text-decoration: none;
+
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover {
+      background: $bg-hover;
+      color: $text-primary;
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+
+  &__text-link--primary {
+    color: $text-secondary;
+
+    &:hover {
+      background: $bg-hover;
+      color: $text-primary;
+    }
+  }
+}
+
+/* ===== Search Field ===== */
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  padding: 10px $spacing-4;
+  border-radius: $radius-2xl;
+  background: rgba($bg-secondary, 0.8);
+  border: 1px solid $border-default;
+  transition: all $transition-normal;
+  width: 100%;
+
+  &:hover {
+    border-color: $border-hover;
+  }
+
+  &--focused {
+    border-color: rgba($primary, 0.5);
+    box-shadow:
+      0 0 0 3px rgba($primary, 0.1),
+      0 4px 12px rgba($primary, 0.15);
+  }
+
+  &__icon {
+    font-size: $text-lg;
+    color: $text-muted;
+    transition: color $transition-normal;
+    flex-shrink: 0;
+
+    &--active {
+      color: $primary;
+    }
+  }
+
+  &__input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: $text-primary;
+    font-size: $text-sm;
+
+    &::placeholder {
+      color: $text-muted;
+    }
+
+    &::-webkit-search-cancel-button,
+    &::-webkit-search-decoration {
+      -webkit-appearance: none;
+      appearance: none;
+    }
+  }
+
+  &__kbd {
+    display: none;
+    align-items: center;
+    gap: $spacing-1;
+    padding: $spacing-1 $spacing-2;
+    font-size: 10px;
+    font-family: $font-mono;
+    color: $text-muted;
+    background: rgba($bg-primary, 0.5);
+    border-radius: $radius-lg;
+    border: 1px solid $border-default;
+
+    svg {
+      font-size: 10px;
+    }
+
+    @include sm {
+      display: flex;
+    }
+  }
+}
+
+

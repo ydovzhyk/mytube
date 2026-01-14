@@ -1,0 +1,550 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.studio-sidebar {
+  @include flex-column;
+  gap: $spacing-2;
+  
+  &__item {
+    @include flex-start;
+    gap: $spacing-3;
+    width: 100%;
+    padding: $spacing-3;
+    border-radius: $radius-md;
+    background: none;
+    border: none;
+    color: $text-secondary;
+    font-size: $text-sm;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all $transition-fast;
+    
+    &:hover {
+      background: $bg-hover;
+      color: $text-primary;
+    }
+    
+    &--active {
+      background: rgba($primary, 0.15);
+      color: $primary-light;
+    }
+    
+    svg {
+      font-size: $text-lg;
+    }
+  }
+}
+
+.studio-header {
+  @include flex-start;
+  gap: $spacing-4;
+  margin-bottom: $spacing-6;
+  
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: $radius-lg;
+    background: $primary;
+    @include flex-center;
+    font-size: $text-xl;
+    color: $text-primary;
+  }
+  
+  &__title {
+    font-size: $text-2xl;
+    font-weight: $font-bold;
+  }
+}
+
+// Content list
+.content-list {
+  @include card;
+  overflow: hidden;
+  
+  &__empty {
+    padding: $spacing-12;
+    text-align: center;
+    color: $text-secondary;
+    @include flex-center;
+    @include flex-column;
+    gap: $spacing-4;
+  }
+}
+
+.content-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-4;
+  border-bottom: 1px solid $border-default;
+  transition: background $transition-fast;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  &:hover {
+    background: $bg-hover;
+  }
+  
+  &__thumbnail {
+    position: relative;
+    width: 160px;
+    height: 90px;
+    flex-shrink: 0;
+    border-radius: $radius-md;
+    overflow: hidden;
+    background: $bg-tertiary;
+  }
+  
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  &__title {
+    font-size: $text-base;
+    font-weight: $font-medium;
+    margin-bottom: $spacing-2;
+    @include line-clamp(1);
+  }
+  
+  &__meta {
+    @include flex-start;
+    gap: $spacing-4;
+    font-size: $text-sm;
+    color: $text-secondary;
+  }
+  
+  &__stat {
+    @include flex-start;
+    gap: $spacing-1;
+    
+    svg {
+      font-size: $text-base;
+    }
+  }
+  
+  &__actions {
+    @include flex-start;
+    gap: $spacing-2;
+    flex-shrink: 0;
+  }
+  
+  &__action {
+    @include button-ghost;
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-md;
+    font-size: $text-lg;
+    
+    &--danger:hover {
+      background: rgba($error, 0.15);
+      color: $error;
+    }
+  }
+}
+
+// Stats cards (legacy, can be removed)
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-4;
+  margin-bottom: $spacing-8;
+}
+
+.stat-card {
+  @include card;
+  padding: $spacing-5;
+  
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: $radius-lg;
+    background: rgba($primary, 0.15);
+    @include flex-center;
+    font-size: $text-xl;
+    color: $primary;
+    margin-bottom: $spacing-3;
+  }
+  
+  &__value {
+    font-size: $text-2xl;
+    font-weight: $font-bold;
+    margin-bottom: $spacing-1;
+  }
+  
+  &__label {
+    font-size: $text-sm;
+    color: $text-secondary;
+  }
+}
+
+// Video table
+.video-table {
+  @include card;
+  overflow: hidden;
+  
+  &__header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 120px;
+    gap: $spacing-4;
+    padding: $spacing-4;
+    background: $bg-tertiary;
+    font-size: $text-sm;
+    font-weight: $font-semibold;
+    color: $text-secondary;
+  }
+  
+  &__row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 120px;
+    gap: $spacing-4;
+    padding: $spacing-4;
+    border-top: 1px solid $border-default;
+    align-items: center;
+    transition: background $transition-fast;
+    
+    &:hover {
+      background: $bg-hover;
+    }
+  }
+  
+  &__video {
+    @include flex-start;
+    gap: $spacing-3;
+  }
+  
+  &__thumbnail {
+    width: 120px;
+    height: 68px;
+    flex-shrink: 0;
+    border-radius: $radius-md;
+    overflow: hidden;
+    background: $bg-tertiary;
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+  
+  &__title {
+    font-weight: $font-medium;
+    @include line-clamp(2);
+  }
+  
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-1;
+    padding: $spacing-1 $spacing-2;
+    border-radius: $radius-sm;
+    font-size: $text-xs;
+    font-weight: $font-medium;
+    
+    &--public {
+      background: rgba($success, 0.15);
+      color: $success;
+    }
+    
+    &--private {
+      background: rgba($warning, 0.15);
+      color: $warning;
+    }
+  }
+  
+  &__actions {
+    @include flex-start;
+    gap: $spacing-2;
+  }
+  
+  &__action {
+    @include button-ghost;
+    padding: $spacing-2;
+    border-radius: $radius-md;
+    font-size: $text-lg;
+    
+    &--danger:hover {
+      background: rgba($error, 0.15);
+      color: $error;
+    }
+  }
+}
+
+// Upload page
+.upload-zone {
+  @include card;
+  @include flex-center;
+  @include flex-column;
+  gap: $spacing-4;
+  padding: $spacing-12;
+  border: 2px dashed $border-default;
+  cursor: pointer;
+  transition: all $transition-fast;
+  min-height: 300px;
+  
+  &:hover,
+  &--dragover {
+    border-color: $primary;
+    background: rgba($primary, 0.05);
+  }
+  
+  &--uploading {
+    cursor: wait;
+    border-color: $primary;
+    background: rgba($primary, 0.05);
+  }
+  
+  &__icon {
+    width: 80px;
+    height: 80px;
+    border-radius: $radius-full;
+    background: $bg-hover;
+    @include flex-center;
+    font-size: $text-3xl;
+    color: $text-secondary;
+  }
+  
+  &__spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid $bg-hover;
+    border-top-color: $primary;
+    border-radius: $radius-full;
+    animation: spin 1s linear infinite;
+  }
+  
+  &__text {
+    text-align: center;
+  }
+  
+  &__title {
+    font-size: $text-lg;
+    font-weight: $font-semibold;
+    margin-bottom: $spacing-2;
+  }
+  
+  &__subtitle {
+    color: $text-secondary;
+    font-size: $text-sm;
+  }
+  
+  &__hint {
+    color: $text-muted;
+    font-size: $text-xs;
+    margin-top: $spacing-2;
+  }
+}
+
+.upload-progress {
+  @include card;
+  padding: $spacing-6;
+  
+  &__header {
+    @include flex-between;
+    margin-bottom: $spacing-4;
+  }
+  
+  &__title {
+    font-weight: $font-semibold;
+  }
+  
+  &__percent {
+    color: $primary;
+    font-weight: $font-semibold;
+  }
+  
+  &__bar {
+    height: 8px;
+    background: $bg-hover;
+    border-radius: $radius-full;
+    overflow: hidden;
+  }
+  
+  &__fill {
+    height: 100%;
+    background: linear-gradient(90deg, $primary, $accent);
+    border-radius: $radius-full;
+    transition: width 0.3s ease;
+  }
+  
+  &__status {
+    margin-top: $spacing-3;
+    font-size: $text-sm;
+    color: $text-secondary;
+  }
+}
+
+.video-form {
+  @include card;
+  padding: $spacing-6;
+  @include flex-column;
+  gap: $spacing-6;
+  
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-6;
+    
+    @media (max-width: $breakpoint-md) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  &__thumbnail {
+    @include flex-column;
+    gap: $spacing-3;
+    
+    &-preview {
+      position: relative;
+      @include aspect-video;
+      border-radius: $radius-lg;
+      overflow: hidden;
+      background: $bg-tertiary;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+    
+    &-empty {
+      @include flex-center;
+      height: 100%;
+      color: $text-muted;
+      font-size: $text-sm;
+    }
+    
+    &-upload {
+      @include button-secondary;
+      width: 100%;
+      padding: $spacing-3;
+    }
+  }
+  
+  &__toggle {
+    @include flex-between;
+    padding: $spacing-4;
+    background: $bg-tertiary;
+    border-radius: $radius-lg;
+  }
+  
+  &__toggle-info {
+    @include flex-column;
+    gap: $spacing-1;
+  }
+  
+  &__toggle-label {
+    font-weight: $font-medium;
+  }
+  
+  &__toggle-hint {
+    font-size: $text-xs;
+    color: $text-secondary;
+  }
+  
+  &__actions {
+    @include flex-start;
+    gap: $spacing-3;
+    justify-content: flex-end;
+    padding-top: $spacing-4;
+    border-top: 1px solid $border-default;
+  }
+}
+
+// Settings page
+.settings-section {
+  @include card;
+  padding: $spacing-6;
+  margin-bottom: $spacing-6;
+  
+  &__title {
+    font-size: $text-lg;
+    font-weight: $font-semibold;
+    margin-bottom: $spacing-6;
+    padding-bottom: $spacing-4;
+    border-bottom: 1px solid $border-default;
+  }
+  
+  &__content {
+    @include flex-column;
+    gap: $spacing-4;
+  }
+  
+  &__row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: $spacing-4;
+    align-items: start;
+    
+    @media (max-width: $breakpoint-md) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  &__label {
+    font-weight: $font-medium;
+    color: $text-secondary;
+    padding-top: $spacing-3;
+  }
+  
+  &__image-upload {
+    @include flex-start;
+    gap: $spacing-4;
+    align-items: center;
+  }
+  
+  &__image-preview {
+    flex-shrink: 0;
+  }
+  
+  &__image-actions {
+    @include flex-column;
+    gap: $spacing-2;
+  }
+}
+
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 24px;
+  
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    
+    &:checked + .toggle-switch__slider {
+      background: $primary;
+      
+      &::before {
+        transform: translateX(24px);
+      }
+    }
+  }
+  
+  &__slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: $bg-hover;
+    border-radius: $radius-full;
+    transition: all $transition-fast;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      left: 2px;
+      bottom: 2px;
+      background: $text-primary;
+      border-radius: $radius-full;
+      transition: transform $transition-fast;
+    }
+  }
+}
+

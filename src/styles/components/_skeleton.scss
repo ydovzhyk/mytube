@@ -1,0 +1,49 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    $bg-tertiary 0%,
+    $bg-hover 50%,
+    $bg-tertiary 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: $radius-md;
+  
+  &--text {
+    height: 1em;
+    border-radius: $radius-sm;
+  }
+  
+  &--title {
+    height: 1.5em;
+    width: 60%;
+  }
+  
+  &--avatar {
+    border-radius: $radius-full;
+  }
+  
+  &--thumbnail {
+    @include aspect-video;
+    border-radius: $radius-lg;
+  }
+  
+  &--button {
+    height: 40px;
+    width: 100px;
+    border-radius: $radius-md;
+  }
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+

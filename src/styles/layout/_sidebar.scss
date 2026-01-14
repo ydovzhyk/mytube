@@ -1,0 +1,171 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.sidebar {
+  position: fixed;
+  top: $header-height;
+  left: 0;
+  bottom: 0;
+  width: $sidebar-width;
+  background: $bg-secondary;
+  border-right: 1px solid $border-default;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: $z-sticky;
+  transition:
+    width $transition-normal,
+    transform $transition-normal;
+
+  @include custom-scrollbar;
+
+  &--collapsed {
+    width: $sidebar-collapsed;
+
+    .sidebar__item-text,
+    .sidebar__subscription-name {
+      opacity: 0;
+    }
+
+    .sidebar__section-title,
+    .sidebar__divider-text {
+      opacity: 0;
+      height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      overflow: hidden;
+    }
+
+    .sidebar__nav {
+      align-items: center;
+    }
+  }
+
+  &--mobile {
+    @include lg {
+      display: block;
+    }
+
+    display: none;
+
+    &.sidebar--open {
+      display: block;
+      transform: translateX(0);
+    }
+  }
+
+  &__content {
+    padding: $spacing-3;
+  }
+
+  &__section {
+    margin-bottom: $spacing-4;
+  }
+
+  &__section-title {
+    font-size: $text-xs;
+    font-weight: $font-semibold;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: $spacing-2 $spacing-3;
+    transition:
+      opacity $transition-normal,
+      height $transition-normal,
+      padding $transition-normal;
+  }
+
+  &__nav {
+    @include flex-column;
+    gap: $spacing-1;
+  }
+
+  &__item {
+    @include flex-start;
+    gap: $spacing-4;
+    width: 100%;
+    padding: $spacing-2 $spacing-3;
+    border-radius: $radius-md;
+    background: none;
+    border: none;
+    color: $text-secondary;
+    font-size: $text-sm;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover {
+      background: $bg-hover;
+      color: $text-primary;
+    }
+
+    &--active {
+      background: rgba($primary, 0.15);
+      color: $primary-light;
+
+      .sidebar__item-icon {
+        color: $primary;
+      }
+    }
+  }
+
+  &__item-icon {
+    font-size: $text-xl;
+    flex-shrink: 0;
+  }
+
+  &__item-text {
+    @include text-ellipsis;
+    transition: opacity $transition-normal;
+  }
+
+  &__divider {
+    @include flex-start;
+    gap: $spacing-3;
+    padding: $spacing-3 $spacing-3;
+    border-top: 1px solid $border-default;
+    margin-top: $spacing-2;
+  }
+
+  &__divider-text {
+    font-size: $text-xs;
+    color: $text-muted;
+    text-transform: uppercase;
+    transition:
+      opacity $transition-normal,
+      height $transition-normal,
+      padding $transition-normal;
+  }
+
+  &__subscription {
+    @include flex-start;
+    gap: $spacing-3;
+    width: 100%;
+    padding: $spacing-2 $spacing-3;
+    border-radius: $radius-md;
+    background: none;
+    border: none;
+    color: $text-secondary;
+    font-size: $text-sm;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover {
+      background: $bg-hover;
+      color: $text-primary;
+    }
+  }
+
+  &__subscription-name {
+    @include text-ellipsis;
+    flex: 1;
+    text-align: left;
+    transition: opacity $transition-normal;
+  }
+
+  &__subscription-live {
+    width: 8px;
+    height: 8px;
+    background: $error;
+    border-radius: $radius-full;
+  }
+}

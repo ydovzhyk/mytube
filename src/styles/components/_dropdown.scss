@@ -1,0 +1,92 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+  
+  &__trigger {
+    cursor: pointer;
+  }
+  
+  &__content {
+    position: absolute;
+    top: calc(100% + $spacing-2);
+    right: 0;
+    min-width: 200px;
+    background: $bg-elevated;
+    border: 1px solid $border-default;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-xl;
+    z-index: $z-dropdown;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all $transition-fast;
+    
+    &--open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    
+    &--left {
+      right: auto;
+      left: 0;
+    }
+  }
+  
+  &__header {
+    padding: $spacing-3 $spacing-4;
+    border-bottom: 1px solid $border-default;
+    display: flex;
+    align-items: center;
+
+    &-info {
+      margin-left: 10px;
+    }
+
+    &-username {
+      font-size: 12px;
+      color: #a1a1aa;
+    }
+  }
+  
+  &__body {
+    padding: $spacing-2;
+  }
+  
+  &__item {
+    @include flex-start;
+    gap: $spacing-3;
+    width: 100%;
+    padding: $spacing-2 $spacing-3;
+    border-radius: $radius-md;
+    background: none;
+    border: none;
+    color: $text-primary;
+    font-size: $text-sm;
+    text-align: left;
+    cursor: pointer;
+    transition: background $transition-fast;
+    
+    &:hover {
+      background: $bg-hover;
+    }
+    
+    &--danger {
+      color: $error;
+      
+      &:hover {
+        background: rgba($error, 0.1);
+      }
+    }
+  }
+  
+  &__divider {
+    height: 1px;
+    background: $border-default;
+    margin: $spacing-2 0;
+  }
+}
+

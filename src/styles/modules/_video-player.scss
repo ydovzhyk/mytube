@@ -1,0 +1,279 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.video-player {
+  position: relative;
+  width: 100%;
+  background: #000;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  
+  &--theater {
+    border-radius: 0;
+    position: fixed;
+    top: $header-height;
+    left: 0;
+    right: 0;
+    z-index: $z-fixed - 1;
+  }
+  
+  &--fullscreen {
+    border-radius: 0;
+  }
+  
+  &__video-wrapper {
+    position: relative;
+    width: 100%;
+    @include aspect-video;
+  }
+  
+  &__video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    cursor: pointer;
+  }
+  
+  &__loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    z-index: 10;
+    opacity: 1;
+    transition: opacity 0.2s ease-out;
+    
+    &--hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+  
+  // Play/Pause animation overlay
+  &__play-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 80px;
+    height: 80px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: $radius-full;
+    @include flex-center;
+    font-size: $text-3xl;
+    color: $text-primary;
+    pointer-events: none;
+    opacity: 0;
+    
+    &--animate {
+      animation: playPulse 0.4s ease-out forwards;
+    }
+  }
+  
+  // Controls
+  &__controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+    padding: $spacing-4;
+    opacity: 0;
+    visibility: hidden;
+    transition: all $transition-fast;
+  }
+  
+  &:hover &__controls,
+  &--controls-visible &__controls {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  // Progress bar
+  &__progress {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: $radius-full;
+    cursor: pointer;
+    margin-bottom: $spacing-3;
+    position: relative;
+    transition: height $transition-fast;
+    
+    &:hover {
+      height: 6px;
+    }
+  }
+  
+  &__progress-filled {
+    height: 100%;
+    background: $primary;
+    border-radius: $radius-full;
+    position: relative;
+    transition: width 0.1s linear;
+  }
+  
+  &__progress-thumb {
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%) scale(0);
+    width: 12px;
+    height: 12px;
+    background: $primary;
+    border-radius: $radius-full;
+    transition: transform $transition-fast;
+  }
+  
+  &__progress:hover &__progress-thumb {
+    transform: translateY(-50%) scale(1);
+  }
+  
+  &__progress-buffer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: $radius-full;
+    pointer-events: none;
+  }
+  
+  // Control buttons row
+  &__buttons {
+    @include flex-between;
+  }
+  
+  &__left-controls,
+  &__right-controls {
+    @include flex-start;
+    gap: $spacing-2;
+  }
+  
+  &__btn {
+    @include button-ghost;
+    padding: $spacing-2;
+    border-radius: $radius-md;
+    font-size: $text-xl;
+    color: $text-primary;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+  
+  // Volume
+  &__volume {
+    @include flex-start;
+    gap: $spacing-1;
+    
+    &-slider {
+      width: 0;
+      opacity: 0;
+      transition: all $transition-fast;
+    }
+    
+    &:hover &-slider {
+      width: 80px;
+      opacity: 1;
+    }
+  }
+  
+  &__slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: $radius-full;
+    cursor: pointer;
+    // Background gradient is set inline via JS
+    
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      background: $text-primary;
+      border-radius: $radius-full;
+      cursor: pointer;
+    }
+    
+    &::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      background: $text-primary;
+      border-radius: $radius-full;
+      border: none;
+      cursor: pointer;
+    }
+    
+    &::-moz-range-track {
+      height: 4px;
+      border-radius: $radius-full;
+    }
+  }
+  
+  // Time display
+  &__time {
+    font-size: $text-sm;
+    color: $text-primary;
+    font-variant-numeric: tabular-nums;
+    padding: 0 $spacing-2;
+  }
+  
+  // Quality selector
+  &__quality {
+    position: relative;
+  }
+  
+  &__quality-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: $bg-elevated;
+    border: 1px solid $border-default;
+    border-radius: $radius-lg;
+    padding: $spacing-2;
+    margin-bottom: $spacing-2;
+    min-width: 120px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all $transition-fast;
+    
+    &--open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+  }
+  
+  &__quality-option {
+    @include button-ghost;
+    width: 100%;
+    padding: $spacing-2 $spacing-3;
+    font-size: $text-sm;
+    justify-content: space-between;
+    
+    &--active {
+      color: $primary;
+    }
+  }
+}
+
+@keyframes playPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0;
+  }
+}
+

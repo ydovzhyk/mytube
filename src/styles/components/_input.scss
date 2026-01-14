@@ -1,0 +1,84 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.input-group {
+  @include flex-column;
+  gap: $spacing-2;
+
+  &__label {
+    font-size: $text-sm;
+    font-weight: $font-medium;
+    color: $text-secondary;
+  }
+
+  &__help {
+    min-height: 16px;
+    font-size: $text-xs;
+    line-height: 16px;
+    color: $text-muted;
+    padding-left: 2px;
+  }
+
+  &__help--error {
+    color: $error;
+  }
+}
+
+.input {
+  @include input-base;
+  height: 40px;
+
+  &--error {
+    border-color: $error;
+
+    &:focus {
+      border-color: $error;
+      box-shadow: 0 0 0 2px rgba($error, 0.2);
+    }
+  }
+}
+
+.textarea {
+  @include input-base;
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* залишаю як було (твій старий блок) */
+.search-input {
+  @include flex-start;
+  gap: $spacing-2;
+  background: $bg-tertiary;
+  border: 1px solid $border-default;
+  border-radius: $radius-full;
+  padding: $spacing-2 $spacing-4;
+  transition: all $transition-fast;
+
+  &:focus-within {
+    border-color: $primary;
+    box-shadow: 0 0 0 2px rgba($primary, 0.2);
+  }
+
+  &__icon {
+    color: $text-muted;
+    flex-shrink: 0;
+  }
+
+  &__field {
+    flex: 1;
+    background: none;
+    border: none;
+    color: $text-primary;
+    font-size: $text-sm;
+
+    &::placeholder {
+      color: $text-muted;
+    }
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+
