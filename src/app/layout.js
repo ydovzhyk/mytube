@@ -8,6 +8,7 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
 import AuthProvider from '@/providers/AuthProvider'
+import RouteGuard from '@/providers/RouteGuard'
 import LoaderListener from '@/providers/LoaderListener'
 import StoreProvider from '@/providers/StoreProvider'
 import ToastListener from '@/providers/ToastListener'
@@ -33,7 +34,7 @@ export default function RootLayout({ children }) {
             <AuthProvider />
             <ToastListener />
             <LoaderListener />
-            {children}
+            <RouteGuard>{children}</RouteGuard>
             <ToastContainer position="bottom-right" />
           </LanguageProvider>
         </StoreProvider>

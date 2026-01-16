@@ -1,144 +1,84 @@
 import axios from 'axios';
-import { getAuthDataFromStorage } from '@/utils/auth-data';
-import { setRefreshUserData, clearUser } from '@/store/auth/auth-slice';
+import { clearUser } from '@/store/auth/auth-slice';
 
 const API_URL = 'http://localhost:4000';
 // const API_URL = process.env.NEXT_PUBLIC_API_URL
 export const instance = axios.create({
   baseURL: `${API_URL}/api`,
-  withCredentials: true, // 👈 обов'язково для HttpOnly cookies
+  withCredentials: true,
 });
 
-function clearAuthData(store) {
-  try {
-    localStorage.removeItem('mytube.authData');
-  } catch {}
-  store.dispatch(clearUser());
-}
-
-function isHardLogoutMessage(msg = '') {
-  const m = String(msg || '').toLowerCase();
-  return (
-    m.includes('please login again') ||
-    m.includes('invalid session') ||
-    m.includes('session timed out') ||
-    m.includes('refresh end') ||
-    m.includes('invalid user')
-  );
-}
-
 export function setupInterceptors(store) {
-  // === Request ===
-  instance.interceptors.request.use(config => {
-    const authData = getAuthDataFromStorage(store);
-    const u = config.url || '';
-    const isRefresh = u.endsWith('/auth/refresh') || u === 'auth/refresh';
-    const isCurrent = u.endsWith('/auth/current') || u === 'auth/current';
-
-    if (authData?.accessToken && !isRefresh && !isCurrent) {
-      config.headers = {
-        ...(config.headers || {}),
-        Authorization: `Bearer ${authData.accessToken}`,
-      };
-    }
-
-    return config;
-  });
-
-  // === Response ===
   instance.interceptors.response.use(
-    r => r,
-    async error => {
-      const originalRequest = error?.config;
-      const { response } = error || {};
-      if (!response || !originalRequest) return Promise.reject(error);
+    (r) => r,
+    async (error) => {
+      const originalRequest = error?.config
+      const response = error?.response
+      if (!response || !originalRequest) return Promise.reject(error)
 
-      const status = response.status;
-      const data = response.data || {};
-      const message = data.message || '';
-      const code = data.code || '';
-      const url = originalRequest.url || '';
-      const isRefreshReq =
-        url.endsWith('/auth/refresh') || url.includes('/auth/refresh');
+      const status = response.status
+      const url = originalRequest.url || ''
+      const code = response.data?.code
 
-      // Якщо саме refresh впав — жорсткий логаут
+      const isRefreshReq = url.includes('/auth/refresh')
+      const isCurrentReq = url.includes('/auth/current')
+
+      // 1) Якщо refresh впав — чистимо стейт
       if (isRefreshReq) {
-        clearAuthData(store);
-        return Promise.reject(error);
+        store.dispatch(clearUser())
+        return Promise.reject(error)
       }
 
-      const hardLogoutByCode =
-        (status === 401 &&
-          (code === 'REFRESH_EXPIRED' || code === 'REFRESH_INVALID')) ||
-        (status === 404 &&
-          (code === 'USER_NOT_FOUND' || code === 'SESSION_NOT_FOUND'));
-
-      if (
-        hardLogoutByCode ||
-        (status === 401 && isHardLogoutMessage(message))
-      ) {
-        clearAuthData(store);
-        return Promise.reject(error);
-      }
-
-      // Кейс: access токен протух → пробуємо 1 раз зробити /auth/refresh
-      if (status === 401 && message === 'Unauthorized') {
-        if (originalRequest._retry) {
-          clearAuthData(store);
-          return Promise.reject(error);
-        }
-        originalRequest._retry = true;
+      // 2) Спецкейс: /auth/current каже "потрібно refresh"
+      if (isCurrentReq && status === 401 && code === 'ACCESS_NEED_REFRESH') {
+        if (originalRequest._retry) return Promise.reject(error)
+        originalRequest._retry = true
 
         try {
-          const authData = getAuthDataFromStorage(store);
-          // refresh тепер тільки в cookie, тому достатньо sid
-          if (!authData?.sid) {
-            clearAuthData(store);
-            return Promise.reject(error);
-          }
-
-          const refreshResp = await instance.post('/auth/refresh', {
-            sid: authData.sid,
-          });
-          const respData = refreshResp.data || {};
-
-          const newData = {
-            accessToken: respData.newAccessToken,
-            sid: respData.sid,
-          };
-
-          store.dispatch(setRefreshUserData(newData));
-          try {
-            localStorage.setItem('mytube.authData', JSON.stringify(newData));
-          } catch {}
-
-          originalRequest.headers = {
-            ...(originalRequest.headers || {}),
-            Authorization: `Bearer ${newData.accessToken}`,
-          };
-
-          // Якщо падав /auth/current — повторюємо запит з оновленим sid
-          if (originalRequest.url === '/auth/current') {
-            originalRequest.data = {
-              sid: newData.sid,
-            };
-          }
-
-          return instance(originalRequest);
-        } catch (refreshErr) {
-          clearAuthData(store);
-          return Promise.reject(refreshErr);
+          await instance.post('/auth/refresh')  // refreshToken cookie
+          return instance(originalRequest)      // повтор current (вже з новим access cookie)
+        } catch (e2) {
+          store.dispatch(clearUser())
+          return Promise.reject(e2)
         }
       }
 
-      // 403 для refresh-логіки: NO_TOKEN та інші — теж логаут
-      if (status === 403) {
-        clearAuthData(store);
+      // 3) Для інших auth-роутів НЕ робимо авто-refresh
+      const isAuthRoute =
+        url.includes('/auth/login') ||
+        url.includes('/auth/register') ||
+        url.includes('/auth/logout') ||
+        url.includes('/auth/current') ||
+        url.includes('/auth/refresh')
+
+      if (isAuthRoute) {
+        return Promise.reject(error)
       }
 
-      return Promise.reject(error);
+      // 4) Для інших API: універсальний 401->refresh->retry
+      if (status === 401) {
+        if (originalRequest._retry) {
+          store.dispatch(clearUser())
+          return Promise.reject(error)
+        }
+        originalRequest._retry = true
+
+        try {
+          await instance.post('/auth/refresh')
+          return instance(originalRequest)
+        } catch (e2) {
+          store.dispatch(clearUser())
+          return Promise.reject(e2)
+        }
+      }
+
+      if (status === 403) {
+        store.dispatch(clearUser())
+      }
+
+      return Promise.reject(error)
     }
-  );
+  )
 }
 
 export const axiosRegister = async userData => {
@@ -156,8 +96,8 @@ export const axiosLogout = async () => {
   return data;
 };
 
-export const axiosGetCurrentUser = async userData => {
-  const { data } = await instance.post('/auth/current', userData);
+export const axiosGetCurrentUser = async () => {
+  const { data } = await instance.get('/auth/current');
   return data;
 };
 

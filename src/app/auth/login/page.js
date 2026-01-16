@@ -12,7 +12,6 @@ import Button from '@/common/shared/button/Button'
 import T from '@/common/shared/i18n/T'
 
 import { FaPlay, FaGoogle } from 'react-icons/fa'
-
 export default function LoginPage() {
   const dispatch = useDispatch()
   const router = useRouter()

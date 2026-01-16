@@ -1,8 +1,11 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
+
+import { useLanguage } from '@/providers/languageContext'
+import { translateMyText } from '@/utils/translating/translating'
 
 import { getChannelError, getChannelMessage } from '@/store/channel/channel-selectors'
 import { clearChannelError, clearChannelMessage } from '@/store/channel/channel-slice'
@@ -16,20 +19,77 @@ import { clearTechnicalError, clearTechnicalMessage } from '@/store/technical/te
 import { getVideosError, getVideosMessage } from '@/store/videos/videos-selectors'
 import { clearVideosError, clearVideosMessage } from '@/store/videos/videos-slice'
 
+const toStr = (v) => {
+  if (!v) return ''
+  if (typeof v === 'string') return v
+  if (typeof v === 'object') return v.message || v.error || JSON.stringify(v)
+  return String(v)
+}
+
 function useToastPair({ error, message, clearError, clearMessage }) {
   const dispatch = useDispatch()
+  const { languageIndex, hydrated } = useLanguage()
+
+  const lastErrorRef = useRef({ text: null, ts: 0 })
+  const lastMsgRef = useRef({ text: null, ts: 0 })
+
+  const DEDUPE_WINDOW_MS = 900
 
   useEffect(() => {
-    if (!error) return
-    toast.error(error)
-    dispatch(clearError())
-  }, [error, dispatch, clearError])
+    const raw = toStr(error)
+    if (!raw || !hydrated) return
+
+    const now = Date.now()
+    if (
+      lastErrorRef.current.text === raw &&
+      now - lastErrorRef.current.ts < DEDUPE_WINDOW_MS
+    ) {
+      dispatch(clearError())
+      return
+    }
+
+    lastErrorRef.current = { text: raw, ts: now }
+
+    let cancelled = false
+    ;(async () => {
+      const translated = await translateMyText(raw, languageIndex)
+      if (cancelled) return
+      toast.error(translated)
+      dispatch(clearError())
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [error, hydrated, languageIndex, dispatch, clearError])
 
   useEffect(() => {
-    if (!message) return
-    toast.success(message)
-    dispatch(clearMessage())
-  }, [message, dispatch, clearMessage])
+    const raw = toStr(message)
+    if (!raw || !hydrated) return
+
+    const now = Date.now()
+    if (
+      lastMsgRef.current.text === raw &&
+      now - lastMsgRef.current.ts < DEDUPE_WINDOW_MS
+    ) {
+      dispatch(clearMessage())
+      return
+    }
+
+    lastMsgRef.current = { text: raw, ts: now }
+
+    let cancelled = false
+    ;(async () => {
+      const translated = await translateMyText(raw, languageIndex)
+      if (cancelled) return
+      toast.success(translated)
+      dispatch(clearMessage())
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [message, hydrated, languageIndex, dispatch, clearMessage])
 }
 
 export default function ToastListener() {
@@ -75,3 +135,4 @@ export default function ToastListener() {
 
   return null
 }
+

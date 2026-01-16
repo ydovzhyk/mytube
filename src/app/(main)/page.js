@@ -9,9 +9,9 @@ export default function HomePage() {
   const dispatch = useDispatch()
   const videos = useSelector(getVideosList)
 
-  useEffect(() => {
-    dispatch(getVideos())
-  }, [dispatch])
+  // useEffect(() => {
+  //   dispatch(getVideos())
+  // }, [dispatch])
 
   return (
     <div>

@@ -23,9 +23,9 @@ const createPersistedAuthReducer = () => {
   if (isServer) return authReducer
   const storage = require('redux-persist/lib/storage').default
   const cfg = {
-    key: 'auth-sid',
+    key: 'auth-local',
     storage,
-    whitelist: ['sid', 'accessToken'],
+    whitelist: [],
   }
   return persistReducer(cfg, authReducer)
 }

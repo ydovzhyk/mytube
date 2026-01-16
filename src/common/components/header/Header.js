@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import clsx from 'clsx'
 import { useEffect, useRef, useState } from 'react'
-import { useSelector } from 'react-redux'
-import { useDispatch } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import { useRouter } from 'next/navigation'
 
 import Avatar from '../../shared/avatar/Avatar'
 import { getLogin, getUser } from '@/store/auth/auth-selectors'
@@ -20,6 +20,7 @@ import { RxDividerVertical } from 'react-icons/rx'
 
 export function Header({ onMenuClick }) {
   const dispatch = useDispatch()
+  const router = useRouter()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
   const isLoggedIn = useSelector(getLogin)
@@ -144,6 +145,7 @@ export function Header({ onMenuClick }) {
                       onClick={() => {
                         setIsDropdownOpen(false)
                         dispatch(logout())
+                        router.push('/')
                       }}
                     >
                       <T caseMode="sentence">sign out</T>

@@ -3,8 +3,6 @@ import { registration, login, logout, getCurrentUser, updateUser, deleteUser } f
 
 const initialState = {
   user: {},
-  sid: null,
-  accessToken: null,
   isLogin: null,
   loading: false,
   isRefreshing: false,
@@ -19,13 +17,12 @@ const okMsg = (payload, fallback) => payload?.message || fallback
 
 const applyAuthPayload = (state, payload) => {
   state.loading = false
-  state.isLogin = true
   state.error = null
+  state.message = null
 
-  state.user = payload?.user ?? { ...(payload || {}) }
-
-  if (payload?.sid !== undefined) state.sid = payload.sid
-  if (payload?.accessToken !== undefined) state.accessToken = payload.accessToken
+  const user = payload?.user ?? null
+  state.user = user || {}
+  state.isLogin = Boolean(user)
 }
 
 const auth = createSlice({
@@ -39,10 +36,6 @@ const auth = createSlice({
     clearAuthMessage: (state) => {
       state.message = null
     },
-    setRefreshUserData: (state, action) => {
-      state.sid = action.payload.sid ?? state.sid
-      state.accessToken = action.payload.accessToken ?? state.accessToken
-    },
   },
 
   extraReducers: (builder) => {
@@ -55,7 +48,6 @@ const auth = createSlice({
       })
       .addCase(registration.fulfilled, (state, { payload }) => {
         applyAuthPayload(state, payload)
-        // state.message = okMsg(payload, 'Registration successful')
       })
       .addCase(registration.rejected, (state, { payload }) => {
         state.loading = false
@@ -70,7 +62,6 @@ const auth = createSlice({
       })
       .addCase(login.fulfilled, (state, { payload }) => {
         applyAuthPayload(state, payload)
-        // state.message = okMsg(payload, 'Login successful')
       })
       .addCase(login.rejected, (state, { payload }) => {
         state.loading = false
@@ -86,7 +77,6 @@ const auth = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.loading = false
         state.isLogin = false
-        // state.message = 'Logged out'
       })
       .addCase(logout.rejected, (state, { payload }) => {
         state.loading = false
@@ -106,12 +96,13 @@ const auth = createSlice({
         applyAuthPayload(state, payload)
         state.isRefreshing = false
       })
-      .addCase(getCurrentUser.rejected, (state, { payload }) => {
+      .addCase(getCurrentUser.rejected, (state) => {
         state.loading = false
         state.isRefreshing = false
-        state.error = errMsg(payload)
+        state.isLogin = false
+        state.user = {}
+        state.error = null
       })
-
       // UPDATE USER
       .addCase(updateUser.pending, (state) => {
         state.loading = true
@@ -148,4 +139,4 @@ const auth = createSlice({
 
 export default auth.reducer
 
-export const { clearUser, clearAuthError, clearAuthMessage, setRefreshUserData } = auth.actions
+export const { clearUser, clearAuthError, clearAuthMessage } = auth.actions
