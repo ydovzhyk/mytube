@@ -1,0 +1,108 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.upload-card {
+  @include card;
+  padding: $spacing-6;
+  max-width: 720px;
+
+  &__title {
+    margin-bottom: $spacing-2;
+  }
+
+  &__subtitle {
+    margin-bottom: $spacing-6;
+    color: $text-secondary;
+  }
+}
+
+.upload-form {
+  display: grid;
+  gap: $spacing-4;
+}
+
+.upload-file {
+  display: flex;
+  gap: $spacing-3;
+  align-items: center;
+  padding: $spacing-3;
+  border: 1px dashed $border-default;
+  border-radius: $radius-md;
+  background: $bg-secondary;
+
+  &__input {
+    display: none;
+  }
+
+  &__btn {
+    padding: $spacing-2 $spacing-4;
+    border-radius: $radius-md;
+    background: $bg-tertiary;
+    border: 1px solid $border-default;
+    transition: all $transition-fast;
+    white-space: nowrap;
+
+    &:hover {
+      background: $bg-hover;
+    }
+  }
+
+  &__name {
+    color: $text-secondary;
+    font-size: $text-sm;
+    @include text-ellipsis;
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+.upload-publish {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  color: $text-secondary;
+
+  input {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.upload-progress {
+  position: relative;
+  height: 10px;
+  border-radius: $radius-full;
+  background: $bg-tertiary;
+  overflow: hidden;
+
+  &__bar {
+    height: 100%;
+    background: $primary;
+    transition: width $transition-fast;
+  }
+
+  &__text {
+    margin-top: $spacing-2;
+    display: inline-block;
+    font-size: $text-xs;
+    color: $text-muted;
+  }
+}
+
+.upload-alert {
+  padding: $spacing-3 $spacing-4;
+  border-radius: $radius-md;
+  border: 1px solid $border-default;
+
+  &--error {
+    background: rgba($error, 0.1);
+    border-color: rgba($error, 0.3);
+    color: $text-primary;
+  }
+
+  &--ok {
+    background: rgba($success, 0.1);
+    border-color: rgba($success, 0.3);
+    color: $text-primary;
+  }
+}

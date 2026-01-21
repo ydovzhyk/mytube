@@ -70,7 +70,7 @@ const videos = createSlice({
       })
       .addCase(getVideos.fulfilled, (store, { payload }) => {
         store.loading = false
-        store.videos = payload?.videos ?? null
+        store.videos = payload?.items ?? []
       })
       .addCase(getVideos.rejected, (store, { payload }) => {
         store.loading = false
