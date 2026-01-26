@@ -1,0 +1,107 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.channels-page {
+  padding: $spacing-6;
+}
+
+.channel-card {
+  @include card;
+  padding: $spacing-6;
+  max-width: 720px;
+
+  &__title {
+    margin-bottom: $spacing-2;
+  }
+
+  &__subtitle {
+    margin-bottom: $spacing-6;
+    color: $text-secondary;
+  }
+}
+
+.channel-form {
+  display: grid;
+  gap: $spacing-4;
+}
+
+.channel-file {
+  display: flex;
+  gap: $spacing-3;
+  align-items: center;
+  padding: $spacing-3;
+  border: 1px dashed $border-default;
+  border-radius: $radius-md;
+  background: $bg-secondary;
+
+  &__input {
+    display: none;
+  }
+
+  &__btn {
+    padding: $spacing-2 $spacing-4;
+    border-radius: $radius-md;
+    background: $bg-tertiary;
+    border: 1px solid $border-default;
+    transition: all $transition-fast;
+    white-space: nowrap;
+
+    &:hover {
+      background: $bg-hover;
+    }
+  }
+
+  &__name {
+    color: $text-secondary;
+    font-size: $text-sm;
+    @include text-ellipsis;
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+.channel-handle-hint {
+  margin-top: -$spacing-2;
+  font-size: $text-sm;
+  color: $text-secondary;
+
+  &__ok {
+    color: $success;
+  }
+
+  &__bad {
+    color: $error;
+  }
+}
+
+.channel-alert {
+  padding: $spacing-3 $spacing-4;
+  border-radius: $radius-md;
+  border: 1px solid $border-default;
+
+  &--error {
+    background: rgba($error, 0.1);
+    border-color: rgba($error, 0.3);
+    color: $text-primary;
+  }
+
+  &--ok {
+    background: rgba($success, 0.1);
+    border-color: rgba($success, 0.3);
+    color: $text-primary;
+  }
+}
+
+.channel-avatar-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  img {
+    width: 64px;
+    height: 64px;
+    border-radius: 9999px;
+    object-fit: cover;
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+}

@@ -7,8 +7,8 @@ import { toast } from 'react-toastify'
 import { useLanguage } from '@/providers/languageContext'
 import { translateMyText } from '@/utils/translating/translating'
 
-import { getChannelError, getChannelMessage } from '@/store/channel/channel-selectors'
-import { clearChannelError, clearChannelMessage } from '@/store/channel/channel-slice'
+import { getChannelsError, getChannelsMessage } from '@/store/channel/channel-selectors'
+import { clearChannelsError, clearChannelsMessage } from '@/store/channel/channel-slice'
 
 import { getAuthError, getAuthMessage } from '@/store/auth/auth-selectors'
 import { clearAuthError, clearAuthMessage } from '@/store/auth/auth-slice'
@@ -93,8 +93,8 @@ function useToastPair({ error, message, clearError, clearMessage }) {
 }
 
 export default function ToastListener() {
-  const channelError = useSelector(getChannelError)
-  const channelMessage = useSelector(getChannelMessage)
+  const channelsError = useSelector(getChannelsError)
+  const channelsMessage = useSelector(getChannelsMessage)
 
   const authError = useSelector(getAuthError)
   const authMessage = useSelector(getAuthMessage)
@@ -106,10 +106,10 @@ export default function ToastListener() {
   const videosMessage = useSelector(getVideosMessage)
 
   useToastPair({
-    error: channelError,
-    message: channelMessage,
-    clearError: clearChannelError,
-    clearMessage: clearChannelMessage,
+    error: channelsError,
+    message: channelsMessage,
+    clearError: clearChannelsError,
+    clearMessage: clearChannelsMessage,
   })
 
   useToastPair({

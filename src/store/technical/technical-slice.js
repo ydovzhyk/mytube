@@ -10,14 +10,14 @@ const technical = createSlice({
   name: 'technical',
   initialState,
   reducers: {
-    clearTechnicalError: store => {
-      store.error = null;
+    clearTechnicalError: state => {
+      state.error = null;
     },
-    clearTechnicalMessage: store => {
-      store.message = null;
+    clearTechnicalMessage: state => {
+      state.message = null;
     },
-    setTechnicalError: (store, action) => {
-      store.error = action.payload;
+    setTechnicalError: (state, action) => {
+      state.error = action.payload;
     },
   },
 

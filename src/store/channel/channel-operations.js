@@ -1,59 +1,96 @@
+import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   axiosCreateChannel,
+  axiosGetMyChannels,
+  axiosGetChannelByHandle,
+  axiosGetChannelById,
+  axiosUpdateChannel,
   axiosDeleteChannel,
-  axiosEditChannel,
-  axiosGetChannel,
-} from '../../lib/api/channel'
-import { createAsyncThunk } from '@reduxjs/toolkit'
+} from '@/lib/api/channel'
+
+const toReject = (error, rejectWithValue) => {
+  const { data, status } = error.response || {
+    data: { message: error.message },
+    status: 0,
+  }
+  return rejectWithValue({ data, status })
+}
+
+export const fetchMyChannels = createAsyncThunk(
+  'channels/fetch-my',
+  async (_, { rejectWithValue }) => {
+    try {
+      const data = await axiosGetMyChannels() // { channels }
+      return data
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
 
 export const createChannel = createAsyncThunk(
-  'channel/create-channel',
-  async (userData, { rejectWithValue }) => {
+  'channels/create',
+  async (formData, {dispatch, rejectWithValue }) => {
     try {
-      const data = await axiosCreateChannel(userData)
+      const data = await axiosCreateChannel(formData) // { channel }
+      if (data) {
+        dispatch(fetchMyChannels())
+      }
       return data
-    } catch (error) {
-      const { data, status } = error.response || { data: { message: error.message }, status: 0 }
-      return rejectWithValue({ data, status })
+    } catch (e) {
+      return toReject(e, rejectWithValue)
     }
   }
 )
 
-export const getChannel = createAsyncThunk(
-  'channel/get-channel',
-  async (userData, { rejectWithValue }) => {
+export const getChannelByHandle = createAsyncThunk(
+  'channels/get-by-handle',
+  async (handle, { rejectWithValue }) => {
     try {
-      const data = await axiosGetChannel(userData)
-      return data
-    } catch (error) {
-      const { data, status } = error.response || { data: { message: error.message }, status: 0 }
-      return rejectWithValue({ data, status })
+      return await axiosGetChannelByHandle(handle) // { channel }
+    } catch (e) {
+      return toReject(e, rejectWithValue)
     }
   }
 )
 
-export const editChannel = createAsyncThunk(
-  'channel/edit-channel',
-  async (userData, { rejectWithValue }) => {
+export const getChannelById = createAsyncThunk(
+  'channels/get-by-id',
+  async (id, { rejectWithValue }) => {
     try {
-      const data = await axiosEditChannel(userData)
+      return await axiosGetChannelById(id) // { channel }
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
+
+export const updateChannel = createAsyncThunk(
+  'channels/update',
+  async ({ id, formData }, {dispatch, rejectWithValue }) => {
+    try {
+      const data = await axiosUpdateChannel({ id, formData }) // { channel }
+      if (data) {
+        dispatch(fetchMyChannels())
+      }
       return data
-    } catch (error) {
-      const { data, status } = error.response || { data: { message: error.message }, status: 0 }
-      return rejectWithValue({ data, status })
+    } catch (e) {
+      return toReject(e, rejectWithValue)
     }
   }
 )
 
 export const deleteChannel = createAsyncThunk(
-  'channel/delete-channel',
-  async (userData, { rejectWithValue }) => {
+  'channels/delete',
+  async (id, {dispatch, rejectWithValue }) => {
     try {
-      const data = await axiosDeleteChannel(userData)
+      const data = await axiosDeleteChannel(id) // { message }
+      if (data) {
+        dispatch(fetchMyChannels())
+      }
       return data
-    } catch (error) {
-      const { data, status } = error.response || { data: { message: error.message }, status: 0 }
-      return rejectWithValue({ data, status })
+    } catch (e) {
+      return toReject(e, rejectWithValue)
     }
   }
 )

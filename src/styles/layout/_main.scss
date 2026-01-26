@@ -4,22 +4,22 @@
 .main-layout {
   min-height: 100vh;
   padding-top: $header-height;
-  
+
   &__content {
     margin-left: $sidebar-width;
     min-height: calc(100vh - $header-height);
     padding: $spacing-6;
     transition: margin-left $transition-normal;
-    
+
     @include lg {
       margin-left: $sidebar-width;
     }
-    
+
     @media (max-width: $breakpoint-lg) {
       margin-left: 0;
     }
   }
-  
+
   &--sidebar-collapsed &__content {
     margin-left: $sidebar-collapsed;
   }
@@ -29,13 +29,13 @@
   min-height: 100vh;
   padding-top: $header-height;
   background: $bg-primary;
-  
+
   &__content {
     @include flex-start;
     align-items: flex-start;
     min-height: calc(100vh - $header-height);
   }
-  
+
   &__sidebar {
     position: sticky;
     top: $header-height;
@@ -44,12 +44,12 @@
     background: $bg-secondary;
     border-right: 1px solid $border-default;
     padding: $spacing-4;
-    
+
     @media (max-width: $breakpoint-lg) {
       display: none;
     }
   }
-  
+
   &__main {
     flex: 1;
     padding: $spacing-6;
@@ -62,19 +62,24 @@
   @include flex-center;
   background:  $bg-primary;
   padding: $spacing-4;
-  
- 
+}
+
+.channel-layout {
+  min-height: 100vh;
+  @include flex-center;
+  background:  $bg-primary;
+  padding: $spacing-4;
 }
 
 .page-header {
   margin-bottom: $spacing-6;
-  
+
   &__title {
     font-size: $text-2xl;
     font-weight: $font-bold;
     margin-bottom: $spacing-2;
   }
-  
+
   &__subtitle {
     color: $text-secondary;
     font-size: $text-base;

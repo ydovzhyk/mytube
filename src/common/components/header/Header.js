@@ -116,20 +116,32 @@ export function Header({ onMenuClick }) {
                   </div>
 
                   <div className="dropdown__body">
+                    {(() => {
+                      const channelIds = user?.channels
+                      const count = Array.isArray(channelIds) ? channelIds.length : 0
+
+                      const label =
+                        count === 0 ? 'add channel' : count === 1 ? 'your channel' : 'your channels'
+
+                      return (
+                        <Link
+                          href="/channels"
+                          className="dropdown__item"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <T caseMode="sentence">{label}</T>
+                        </Link>
+                      )
+                    })()}
+
                     <Link
-                      href={`/channel/${user?.email || "User"}`}
-                      className="dropdown__item"
-                      onClick={() => setIsDropdownOpen(false)}
-                    >
-                      <T caseMode="sentence">your channel</T>
-                    </Link>
-                    <Link
-                      href="/studio/dashboard"
+                      href="/studio"
                       className="dropdown__item"
                       onClick={() => setIsDropdownOpen(false)}
                     >
                       <T caseMode="sentence">studio</T>
                     </Link>
+
                     <Link
                       href="/studio/settings"
                       className="dropdown__item"

@@ -1,21 +1,50 @@
 import { instance } from './auth'
 
-export const axiosCreateChannel = async (userData) => {
-  const { data } = await instance.post(`/channel/create-channel`, userData)
-  return data
+// CREATE: POST /channels/create  (banner required)
+export const axiosCreateChannel = async (formData) => {
+  const { data } = await instance.post('/channels/create', formData)
+  return data // { channel }
 }
 
-export const axiosGetChannel = async () => {
-  const { data } = await instance.get(`/channel/get-channel`)
-  return data
+// GET MY CHANNELS: GET /channels
+export const axiosGetMyChannels = async () => {
+  const { data } = await instance.get('/channels')
+  return data // { channels }
 }
 
-export const axiosEditChannel = async (userData) => {
-  const { data } = await instance.put(`/channel/edit-channel`, userData)
-  return data
+// GET PUBLIC BY HANDLE: GET /channels/by-handle/:handle
+export const axiosGetChannelByHandle = async (handle) => {
+  const safe = String(handle || '').replace(/^@+/, '')
+  const { data } = await instance.get(`/channels/by-handle/${safe}`)
+  return data // { channel }
 }
 
+// GET PUBLIC BY ID: GET /channels/:id
+export const axiosGetChannelById = async (id) => {
+  const { data } = await instance.get(`/channels/${id}`)
+  return data // { channel }
+}
+
+// UPDATE: PATCH /channels/:id  (banner optional, can be only banner)
+export const axiosUpdateChannel = async ({ id, formData }) => {
+  const { data } = await instance.patch(`/channels/${id}`, formData)
+  return data // { channel }
+}
+
+// DELETE: DELETE /channels/:id
 export const axiosDeleteChannel = async (id) => {
-  const { data } = await instance.delete(`/channel/delete/${id}`)
-  return data
+  const { data } = await instance.delete(`/channels/${id}`)
+  return data // { message }
 }
+
+export const axiosCheckHandle = async ({ handle, signal }) => {
+  const safe = String(handle || '')
+    .replace(/^@+/, '')
+    .trim()
+    .toLowerCase()
+  const { data } = await instance.get(`/channels/check-handle?handle=${encodeURIComponent(safe)}`, {
+    signal,
+  })
+  return data // { handle, available }
+}
+

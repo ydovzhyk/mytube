@@ -23,104 +23,104 @@ const videos = createSlice({
   name: 'videos',
   initialState,
   reducers: {
-    clearVideosError: (store) => {
-      store.error = ''
+    clearVideosError: (state) => {
+      state.error = ''
     },
-    clearVideosMessage: (store) => {
-      store.message = ''
+    clearVideosMessage: (state) => {
+      state.message = ''
     },
-    setVideosError: (store, action) => {
-      store.error = action.payload
+    setVideosError: (state, action) => {
+      state.error = action.payload
     },
-    setUploadProgress: (store, action) => {
-      store.uploadProgress = action.payload
+    setUploadProgress: (state, action) => {
+      state.uploadProgress = action.payload
     },
-    resetUploadProgress: (store) => {
-      store.uploadProgress = 0
+    resetUploadProgress: (state) => {
+      state.uploadProgress = 0
     },
   },
 
   extraReducers: (builder) => {
     builder
       // * Upload Video
-      .addCase(uploadVideo.pending, (store) => {
-        store.uploadLoading = true
-        store.error = null
-        store.message = null
-        store.uploadProgress = 0
+      .addCase(uploadVideo.pending, (state) => {
+        state.uploadLoading = true
+        state.error = null
+        state.message = null
+        state.uploadProgress = 0
       })
-      .addCase(uploadVideo.fulfilled, (store, { payload }) => {
-        store.uploadLoading = false
-        store.message = okMsg(payload, 'Video uploaded')
-        store.uploadProgress = 100
+      .addCase(uploadVideo.fulfilled, (state, { payload }) => {
+        state.uploadLoading = false
+        state.message = okMsg(payload, 'Video uploaded')
+        state.uploadProgress = 100
 
-        if (payload?.myChannelVideos) store.myChannelVideos = payload.myChannelVideos
+        if (payload?.myChannelVideos) state.myChannelVideos = payload.myChannelVideos
       })
-      .addCase(uploadVideo.rejected, (store, { payload }) => {
-        store.uploadLoading = false
-        store.error = errMsg(payload)
-        store.uploadProgress = 0
+      .addCase(uploadVideo.rejected, (state, { payload }) => {
+        state.uploadLoading = false
+        state.error = errMsg(payload)
+        state.uploadProgress = 0
       })
 
       // * Get Videos
-      .addCase(getVideos.pending, (store) => {
-        store.loading = true
-        store.error = null
-        store.message = null
+      .addCase(getVideos.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.message = null
       })
-      .addCase(getVideos.fulfilled, (store, { payload }) => {
-        store.loading = false
-        store.videos = payload?.items ?? []
+      .addCase(getVideos.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.videos = payload?.items ?? []
       })
-      .addCase(getVideos.rejected, (store, { payload }) => {
-        store.loading = false
-        store.error = errMsg(payload)
+      .addCase(getVideos.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
       })
 
       // * Get My Channel Videos
-      .addCase(getMyChannelVideos.pending, (store) => {
-        store.loading = true
-        store.error = null
-        store.message = null
+      .addCase(getMyChannelVideos.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.message = null
       })
-      .addCase(getMyChannelVideos.fulfilled, (store, { payload }) => {
-        store.loading = false
-        store.myChannelVideos = payload?.myChannelVideos ?? null
+      .addCase(getMyChannelVideos.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.myChannelVideos = payload?.myChannelVideos ?? null
       })
-      .addCase(getMyChannelVideos.rejected, (store, { payload }) => {
-        store.loading = false
-        store.error = errMsg(payload)
+      .addCase(getMyChannelVideos.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
       })
 
       // * Get Subscription Videos
-      .addCase(getSubscriptionVideos.pending, (store) => {
-        store.loading = true
-        store.error = null
-        store.message = null
+      .addCase(getSubscriptionVideos.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.message = null
       })
-      .addCase(getSubscriptionVideos.fulfilled, (store, { payload }) => {
-        store.loading = false
-        store.subscriptionVideos = payload?.subscriptionVideos ?? null
+      .addCase(getSubscriptionVideos.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.subscriptionVideos = payload?.subscriptionVideos ?? null
       })
-      .addCase(getSubscriptionVideos.rejected, (store, { payload }) => {
-        store.loading = false
-        store.error = errMsg(payload)
+      .addCase(getSubscriptionVideos.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
       })
 
       // * Delete Video
-      .addCase(deleteVideo.pending, (store) => {
-        store.loading = true
-        store.error = null
-        store.message = null
+      .addCase(deleteVideo.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.message = null
       })
-      .addCase(deleteVideo.fulfilled, (store, { payload }) => {
-        store.loading = false
-        store.message = okMsg(payload, 'Video deleted')
-        store.myChannelVideos = payload?.myChannelVideos ?? store.myChannelVideos
+      .addCase(deleteVideo.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.message = okMsg(payload, 'Video deleted')
+        state.myChannelVideos = payload?.myChannelVideos ?? state.myChannelVideos
       })
-      .addCase(deleteVideo.rejected, (store, { payload }) => {
-        store.loading = false
-        store.error = errMsg(payload)
+      .addCase(deleteVideo.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
       })
   },
 })

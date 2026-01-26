@@ -11,7 +11,7 @@ import {
 } from 'redux-persist'
 
 import authReducer from './auth/auth-slice'
-import channelReducer from './channel/channel-slice'
+import channelsReducer from './channel/channel-slice'
 import technicalReducer from './technical/technical-slice'
 import videosReducer from './videos/videos-slice'
 import { setupInterceptors } from '../lib/api/auth'
@@ -48,7 +48,7 @@ export const store = configureStore({
   reducer: {
     auth: finalAuthReducer,
     technical: finalTechnicalReducer,
-    channel: channelReducer,
+    channels: channelsReducer,
     videos: videosReducer,
   },
   middleware: (getDefaultMiddleware) => {

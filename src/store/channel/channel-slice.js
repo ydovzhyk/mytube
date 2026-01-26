@@ -1,100 +1,126 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { createChannel, deleteChannel, editChannel, getChannel } from './channel-operations'
+import {
+  fetchMyChannels,
+  createChannel,
+  updateChannel,
+  deleteChannel,
+  getChannelByHandle,
+  getChannelById,
+} from './channel-operations'
 
 const initialState = {
+  channels: [],
+  channelByHandle: null,
+  channelById: null,
+  loading: false,
   error: null,
   message: null,
-  loading: false,
-  channelData: null,
 }
 
 const errMsg = (payload) =>
-  payload?.data?.message || payload?.message || 'Oops, something went wrong, try again'
+  payload?.data?.message || payload?.message || 'Oops, something went wrong'
 
 const okMsg = (payload, fallback) => payload?.message || fallback
 
-const channel = createSlice({
-  name: 'channel',
+const channelsSlice = createSlice({
+  name: 'channels',
   initialState,
   reducers: {
-    clearChannelError: (store) => {
-      store.error = ''
+    clearChannelsError(state) {
+      state.error = null
     },
-    clearChannelMessage: (store) => {
-      store.message = ''
-    },
-    setChannelError: (store, action) => {
-      store.error = action.payload
+    clearChannelsMessage(state) {
+      state.message = null
     },
   },
-
   extraReducers: (builder) => {
     builder
       // * Create channel
-      .addCase(createChannel.pending, (store) => {
-        store.loading = true
-        store.error = null
-        store.message = null
+      .addCase(createChannel.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.message = null
       })
-      .addCase(createChannel.fulfilled, (store, { payload }) => {
-        store.loading = false
-        store.message = okMsg(payload, 'Channel created')
-        store.channelData = payload?.channelData ?? store.channelData
+      .addCase(createChannel.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.message = okMsg(payload, 'Channel created')
       })
-      .addCase(createChannel.rejected, (store, { payload }) => {
-        store.loading = false
-        store.error = errMsg(payload)
+      .addCase(createChannel.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
       })
-
-      // * Get Channel
-      .addCase(getChannel.pending, (store) => {
-        store.loading = true
-        store.error = null
-        store.message = null
+      // * Get My channels
+      .addCase(fetchMyChannels.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.message = null
       })
-      .addCase(getChannel.fulfilled, (store, { payload }) => {
-        store.loading = false
-        store.channelData = payload?.channelData ?? null
+      .addCase(fetchMyChannels.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.channels = payload?.channels || []
       })
-      .addCase(getChannel.rejected, (store, { payload }) => {
-        store.loading = false
-        store.error = errMsg(payload)
+      .addCase(fetchMyChannels.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
       })
-
-      // * Edit Channel
-      .addCase(editChannel.pending, (store) => {
-        store.loading = true
-        store.error = null
-        store.message = null
+    // * Update channel
+      .addCase(updateChannel.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.message = null
       })
-      .addCase(editChannel.fulfilled, (store, { payload }) => {
-        store.loading = false
-        store.message = okMsg(payload, 'Channel updated')
-        store.channelData = payload?.channelData ?? store.channelData
+      .addCase(updateChannel.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.message = okMsg(payload, 'Channel updated')
       })
-      .addCase(editChannel.rejected, (store, { payload }) => {
-        store.loading = false
-        store.error = errMsg(payload)
+      .addCase(updateChannel.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
       })
-
-      // * Delete Channel
-      .addCase(deleteChannel.pending, (store) => {
-        store.loading = true
-        store.error = null
-        store.message = null
+    // * Delete channel
+      .addCase(deleteChannel.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.message = null
       })
-      .addCase(deleteChannel.fulfilled, (store, { payload }) => {
-        store.loading = false
-        store.message = okMsg(payload, 'Channel deleted')
-        store.channelData = null
+      .addCase(deleteChannel.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.message = okMsg(payload, 'Channel deleted')
       })
-      .addCase(deleteChannel.rejected, (store, { payload }) => {
-        store.loading = false
-        store.error = errMsg(payload)
+      .addCase(deleteChannel.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
+      })
+      // * Get channel by handle
+      .addCase(getChannelByHandle.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.message = null
+      })
+      .addCase(getChannelByHandle.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.channelByHandle = payload?.channel || null
+      })
+      .addCase(getChannelByHandle.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
+      })
+      // * Get channel by id
+      .addCase(getChannelById.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.message = null
+      })
+      .addCase(getChannelById.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.channelById = payload?.channel || null
+      })
+      .addCase(getChannelById.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
       })
   },
 })
 
-export default channel.reducer
-
-export const { clearChannelError, clearChannelMessage, setChannelError } = channel.actions
+export default channelsSlice.reducer
+export const { clearChannelsError, clearChannelsMessage } = channelsSlice.actions
