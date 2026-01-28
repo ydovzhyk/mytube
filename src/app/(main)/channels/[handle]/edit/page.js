@@ -1,9 +1,9 @@
 import ChannelForm from '@/common/components/channels/ChannelForm'
 
-export default function CreateChannelPage() {
+export default function EditChannelPage() {
   return (
     <div className="channels-page">
-      <ChannelForm />
+      <ChannelForm mode="edit" />
     </div>
   )
 }

@@ -2,11 +2,12 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   axiosCreateChannel,
   axiosGetMyChannels,
-  axiosGetChannelByHandle,
+  axiosGetPublicChannelByHandle,
   axiosGetChannelById,
   axiosUpdateChannel,
   axiosDeleteChannel,
 } from '@/lib/api/channel'
+import { getCurrentUser } from '../auth/auth-operations'
 
 const toReject = (error, rejectWithValue) => {
   const { data, status } = error.response || {
@@ -35,6 +36,7 @@ export const createChannel = createAsyncThunk(
       const data = await axiosCreateChannel(formData) // { channel }
       if (data) {
         dispatch(fetchMyChannels())
+        dispatch(getCurrentUser())
       }
       return data
     } catch (e) {
@@ -43,11 +45,11 @@ export const createChannel = createAsyncThunk(
   }
 )
 
-export const getChannelByHandle = createAsyncThunk(
+export const getPublicChannelByHandle = createAsyncThunk(
   'channels/get-by-handle',
   async (handle, { rejectWithValue }) => {
     try {
-      return await axiosGetChannelByHandle(handle) // { channel }
+      return await axiosGetPublicChannelByHandle(handle) // { channel }
     } catch (e) {
       return toReject(e, rejectWithValue)
     }

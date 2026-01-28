@@ -105,3 +105,72 @@
     border: 1px solid rgba(255,255,255,0.12);
   }
 }
+
+.channel-links {
+  margin-top: $spacing-2;
+  padding: $spacing-4;
+  border: 1px solid $border-default;
+  border-radius: $radius-2xl;
+  background: $bg-secondary;
+}
+
+.channel-links__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-4;
+  margin-bottom: $spacing-4;
+}
+
+.channel-links__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: $text-secondary;
+  font-weight: $font-medium;
+}
+
+.channel-links__subtitle {
+  color: $text-tertiary;
+  font-size: $text-xs;
+}
+
+.channel-links__add {
+  @include button-ghost;
+  height: 36px;
+  padding: 0 $spacing-4;
+  border-radius: $radius-full;
+}
+
+.channel-links__list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-3;
+}
+
+.channel-links__row {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 36px;
+  gap: $spacing-3;
+  align-items: end;
+
+  @include sm {
+    grid-template-columns: 1fr 2fr 36px;
+  }
+
+  @include md {
+    grid-template-columns: 1fr 2.2fr 36px;
+  }
+}
+
+.channel-links__col--url {
+  min-width: 0;
+}
+
+.channel-links__remove {
+  @include button-ghost;
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-full;
+  align-self: center;
+}

@@ -13,7 +13,7 @@ export const axiosGetMyChannels = async () => {
 }
 
 // GET PUBLIC BY HANDLE: GET /channels/by-handle/:handle
-export const axiosGetChannelByHandle = async (handle) => {
+export const axiosGetPublicChannelByHandle = async (handle) => {
   const safe = String(handle || '').replace(/^@+/, '')
   const { data } = await instance.get(`/channels/by-handle/${safe}`)
   return data // { channel }

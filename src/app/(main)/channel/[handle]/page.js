@@ -1,18 +1,19 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useSelector } from 'react-redux'
-import Link from 'next/link'
+import { useDispatch, useSelector } from 'react-redux'
+import { HiSearch } from 'react-icons/hi'
 
-import { getChannels } from '@/store/channel/channel-selectors'
+import { getChannelByHandle } from '@/store/channel/channel-selectors'
+import { clearChannelByHandle } from '@/store/channel/channel-slice'
+import { getPublicChannelByHandle } from '@/store/channel/channel-operations'
+
 import { useTranslate } from '@/utils/translating/translating'
 
 import VideoCard from '@/common/shared/video-card/VideoCard'
 import Button from '@/common/shared/button/Button'
 import T from '@/common/shared/i18n/T'
-
-import { HiSearch, HiCog } from 'react-icons/hi'
 
 const DESC_LIMIT = 320
 const BIO_LIMIT = 140
@@ -44,19 +45,12 @@ function shortHost(url = '') {
   }
 }
 
-export default function ChannelHandlePage() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const settingsRef = useRef(null)
-
+export default function PublicChannelPage() {
   const params = useParams()
   const handle = safeHandle(params?.handle)
 
-  const channels = useSelector(getChannels)
-
-  const channel = useMemo(() => {
-    if (!handle) return null
-    return channels?.find((c) => String(c.handle || '').toLowerCase() === handle) || null
-  }, [channels, handle])
+  const dispatch = useDispatch()
+  const channel = useSelector(getChannelByHandle)
 
   const [showMoreBio, setShowMoreBio] = useState(false)
   const [showMoreDesc, setShowMoreDesc] = useState(false)
@@ -67,6 +61,17 @@ export default function ChannelHandlePage() {
   const placeholderSearch = useTranslate('Search in this channel')
   const more = useTranslate('...more')
   const less = useTranslate('less')
+
+  useEffect(() => {
+    if (!handle) return
+    dispatch(clearChannelByHandle())
+    dispatch(getPublicChannelByHandle(handle))
+  }, [dispatch, handle])
+
+  const hasBanner = Boolean(channel?.bannerUrl)
+
+  const subs = channel?.followersCount ?? 0
+  const videoCount = channel?.videosCount ?? 0
 
   const bio = useTranslate(channel?.bio || '')
   const bioShort = useMemo(() => {
@@ -82,13 +87,9 @@ export default function ChannelHandlePage() {
     return description.slice(0, DESC_LIMIT).trim() + '…'
   }, [description])
 
-  const hasBanner = Boolean(channel?.bannerUrl)
-
-  const subs = channel?.followersCount ?? 0
-  const videoCount = channel?.videosCount ?? 0
-
   const links = Array.isArray(channel?.links) ? channel.links : []
   const contactEmail = String(channel?.contactEmail || '').trim()
+  const firstLink = links[0]?.url ? normalizeUrl(links[0].url) : ''
 
   const videosRaw = channel?.latestVideos || []
 
@@ -117,36 +118,6 @@ export default function ChannelHandlePage() {
       return title.includes(q) || desc.includes(q) || tags.includes(q)
     })
   }, [videosRaw, sort, query])
-
-  useEffect(() => {
-    if (!isSettingsOpen) return
-
-    const onDocClick = (e) => {
-      if (!settingsRef.current) return
-      if (!settingsRef.current.contains(e.target)) setIsSettingsOpen(false)
-    }
-
-    const onEsc = (e) => {
-      if (e.key === 'Escape') setIsSettingsOpen(false)
-    }
-
-    document.addEventListener('mousedown', onDocClick)
-    document.addEventListener('keydown', onEsc)
-    return () => {
-      document.removeEventListener('mousedown', onDocClick)
-      document.removeEventListener('keydown', onEsc)
-    }
-  }, [isSettingsOpen])
-
-  if (!handle) {
-    return (
-      <div className="channel-page">
-        <div className="channel-empty">
-          <T>Loading…</T>
-        </div>
-      </div>
-    )
-  }
 
   if (!channel) {
     return (
@@ -184,7 +155,7 @@ export default function ChannelHandlePage() {
 
             {/* @handle + stats */}
             <div className="channel-hero__stats">
-              <span className="channel-hero__handle">@{channel.handle || handle}</span>
+              <span className="channel-hero__handle">@{channel.handle}</span>
               <span className="channel-hero__dot">•</span>
               <span>
                 {subs} <T caseMode="lower">subscribers</T>
@@ -195,7 +166,7 @@ export default function ChannelHandlePage() {
               </span>
             </div>
 
-            {/* BIO */}
+            {/* BIO (short + more) */}
             {bio ? (
               <div className="channel-hero__bio">
                 <span>{showMoreBio ? bio : bioShort}</span>
@@ -244,90 +215,17 @@ export default function ChannelHandlePage() {
               </div>
             ) : null}
 
-            {/* Actions */}
+            {/* Subscribe row */}
             <div className="channel-hero__actions">
-              <Button variant="primary" height="40px" disabled>
+              <Button variant="primary" height="40px">
                 <T>Subscribe</T>
               </Button>
-              <div className="channel-settings" ref={settingsRef}>
-                <Button
-                  variant="primary"
-                  height="40px"
-                  leftIcon={<HiCog size={20} />}
-                  onClick={() => setIsSettingsOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={isSettingsOpen}
-                >
-                  <T>Settings</T>
-                </Button>
-
-                {isSettingsOpen ? (
-                  <div className="channel-settings__menu" role="menu">
-                    <Link
-                      href={`/channels/@${channel.handle}/edit`}
-                      className="channel-settings__item"
-                      onClick={() => setIsSettingsOpen(false)}
-                    >
-                      <T caseMode="sentence">edit channel</T>
-                    </Link>
-
-                    <Link
-                      href={`/studio/upload?channel=@${channel.handle}`}
-                      className="channel-settings__item"
-                      onClick={() => setIsSettingsOpen(false)}
-                    >
-                      <T caseMode="sentence">upload video</T>
-                    </Link>
-
-                    <div className="channel-settings__divider" />
-
-                    <Link
-                      href={`/channels/@${channel.handle}/playlists/new`}
-                      className="channel-settings__item"
-                      onClick={() => setIsSettingsOpen(false)}
-                    >
-                      <T caseMode="sentence">create playlist</T>
-                    </Link>
-
-                    <Link
-                      href={`/channels/@${channel.handle}/playlists`}
-                      className="channel-settings__item"
-                      onClick={() => setIsSettingsOpen(false)}
-                    >
-                      <T caseMode="sentence">manage playlists</T>
-                    </Link>
-
-                    <div className="channel-settings__divider" />
-
-                    <Link
-                      href={`/channels/@${channel.handle}/videos`}
-                      className="channel-settings__item"
-                      onClick={() => setIsSettingsOpen(false)}
-                    >
-                      <T caseMode="sentence">manage videos</T>
-                    </Link>
-
-                    <div className="channel-settings__divider" />
-
-                    <button
-                      type="button"
-                      className="channel-settings__item channel-settings__item--danger"
-                      onClick={() => {
-                        setIsSettingsOpen(false)
-                        // TODO: confirm modal
-                      }}
-                    >
-                      <T caseMode="sentence">delete channel</T>
-                    </button>
-                  </div>
-                ) : null}
-              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* DESCRIPTION */}
+      {/* DESCRIPTION (optional, like "about" one-liner under link) */}
       {description ? (
         <div className="channel-description">
           <span className="channel-description__text">

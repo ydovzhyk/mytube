@@ -81,4 +81,59 @@
   }
 }
 
+.textarea {
+  @include input-base;
+
+  min-height: 120px;
+  width: 100%;
+  max-width: 100%;
+  overflow: auto;
+  resize: vertical;
+
+  padding-top: 10px;
+  padding-bottom: 10px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  // щоб праворуч не з’являлась "біла зона" під скролбар
+  scrollbar-gutter: stable both-edges;
+
+  // Firefox
+  scrollbar-width: thin;
+  scrollbar-color: $bg-hover transparent;
+
+  // WebKit (Chrome/Edge/Safari)
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: $radius-full;
+    margin: 6px; // щоб скролбар був "всередині", а не по краю
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $bg-hover;
+    border-radius: $radius-full;
+    border: 2px solid $bg-tertiary;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: $text-muted;
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: $bg-tertiary;
+  }
+
+  &::-webkit-resizer {
+    background: $bg-tertiary;
+  }
+}
 

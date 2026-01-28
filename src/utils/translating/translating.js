@@ -49,15 +49,17 @@ const DropdownIndicator = (props) => (
   </components.DropdownIndicator>
 )
 
+const selectStyles = {
+  menuPortal: (base) => ({ ...base, zIndex: 20000 }),
+  menu: (base) => ({ ...base, zIndex: 20000 }),
+}
+
 export default function TranslateMe() {
   const { languageIndex, hydrated, updateLanguageIndex } = useLanguage()
 
   const options = useMemo(() => {
     const langs = languagesAndCodes?.languages ?? []
-    return langs.map((l, idx) => ({
-      value: idx,
-      ...l,
-    }))
+    return langs.map((l, idx) => ({ value: idx, ...l }))
   }, [])
 
   if (!hydrated) return null
@@ -80,8 +82,10 @@ export default function TranslateMe() {
           writeSettings({ selectedIndex: idx })
         }}
         components={{ SingleValue, Option, DropdownIndicator, IndicatorSeparator: null }}
+        styles={selectStyles}
         menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
         menuPosition="fixed"
+        menuPlacement="bottom"
       />
     </div>
   )

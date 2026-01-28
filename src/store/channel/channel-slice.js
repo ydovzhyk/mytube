@@ -4,7 +4,7 @@ import {
   createChannel,
   updateChannel,
   deleteChannel,
-  getChannelByHandle,
+  getPublicChannelByHandle,
   getChannelById,
 } from './channel-operations'
 
@@ -32,6 +32,12 @@ const channelsSlice = createSlice({
     clearChannelsMessage(state) {
       state.message = null
     },
+    channelsBoot(state) {
+      state.loading = true
+    },
+    clearChannelByHandle(state) {
+      state.channelByHandle = null
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -51,7 +57,6 @@ const channelsSlice = createSlice({
       })
       // * Get My channels
       .addCase(fetchMyChannels.pending, (state) => {
-        state.loading = true
         state.error = null
         state.message = null
       })
@@ -63,7 +68,7 @@ const channelsSlice = createSlice({
         state.loading = false
         state.error = errMsg(payload)
       })
-    // * Update channel
+      // * Update channel
       .addCase(updateChannel.pending, (state) => {
         state.loading = true
         state.error = null
@@ -77,7 +82,7 @@ const channelsSlice = createSlice({
         state.loading = false
         state.error = errMsg(payload)
       })
-    // * Delete channel
+      // * Delete channel
       .addCase(deleteChannel.pending, (state) => {
         state.loading = true
         state.error = null
@@ -92,16 +97,16 @@ const channelsSlice = createSlice({
         state.error = errMsg(payload)
       })
       // * Get channel by handle
-      .addCase(getChannelByHandle.pending, (state) => {
+      .addCase(getPublicChannelByHandle.pending, (state) => {
         state.loading = true
         state.error = null
         state.message = null
       })
-      .addCase(getChannelByHandle.fulfilled, (state, { payload }) => {
+      .addCase(getPublicChannelByHandle.fulfilled, (state, { payload }) => {
         state.loading = false
         state.channelByHandle = payload?.channel || null
       })
-      .addCase(getChannelByHandle.rejected, (state, { payload }) => {
+      .addCase(getPublicChannelByHandle.rejected, (state, { payload }) => {
         state.loading = false
         state.error = errMsg(payload)
       })
@@ -123,4 +128,4 @@ const channelsSlice = createSlice({
 })
 
 export default channelsSlice.reducer
-export const { clearChannelsError, clearChannelsMessage } = channelsSlice.actions
+export const { clearChannelsError, clearChannelsMessage, channelsBoot, clearChannelByHandle } = channelsSlice.actions
