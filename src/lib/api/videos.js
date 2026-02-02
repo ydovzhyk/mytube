@@ -28,7 +28,10 @@ export const axiosGetVideos = async (params) => {
 }
 
 export const axiosGetMyChannelVideos = async (params) => {
-  const { data } = await instance.get('/videos/my', {
+  const isOwner = params?.publishedOnly === false
+  const url = isOwner ? '/videos/channel/owner' : '/videos/channel'
+
+  const { data } = await instance.get(url, {
     params: cleanParams(params),
   })
   return data
@@ -41,13 +44,22 @@ export const axiosGetSubscriptionVideos = async (params) => {
   return data
 }
 
+export const axiosGetVideosPicker = async (params) => {
+  // params: { channelId }
+  const { data } = await instance.get('/videos/picker', {
+    params: cleanParams(params),
+  })
+  return data
+}
+
 export const axiosDeleteVideo = async (params) => {
   const id = params?.videoId ?? params?.id
   if (!id) {
-    // Let thunk catch it as a normal error if you want, but it's better to throw
     throw new Error('Video id is required')
   }
 
   const { data } = await instance.delete(`/videos/${id}`)
   return data
 }
+
+

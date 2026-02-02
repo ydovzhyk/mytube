@@ -2,6 +2,7 @@
 @use '../mixins' as *;
 
 .channels-page {
+  margin-top: -12px;
   padding: $spacing-6;
 }
 
@@ -9,6 +10,7 @@
   @include card;
   padding: $spacing-6;
   max-width: 720px;
+  margin: 0 auto;
 
   &__title {
     margin-bottom: $spacing-2;

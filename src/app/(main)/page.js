@@ -24,7 +24,7 @@ export default function HomePage() {
       <div className="video-grid">
         {videos?.length ? (
           videos.map((video) => (
-            <VideoCard key={video.id} video={video} />
+            <VideoCard key={video._id} video={video} />
         ))
         ) : (
           <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No videos found</div>

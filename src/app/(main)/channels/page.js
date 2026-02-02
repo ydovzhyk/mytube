@@ -1,26 +1,34 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSelector } from 'react-redux'
-import { getChannels, getChannelsLoading } from '@/store/channel/channel-selectors'
+import { useDispatch } from 'react-redux'
+import { fetchMyChannels } from '@/store/channel/channel-operations'
 
 export default function ChannelsPage() {
   const router = useRouter()
-  const channels = useSelector(getChannels)
-  const isLoading = useSelector(getChannelsLoading)
+  const dispatch = useDispatch()
+  const didRun = useRef(false)
 
   useEffect(() => {
-    if (isLoading) return
+    if (didRun.current) return
+    didRun.current = true
+    ;(async () => {
+      try {
+        const data = await dispatch(fetchMyChannels()).unwrap()
+        const channels = Array.isArray(data?.channels) ? data.channels : []
 
-    if (!channels.length) {
-      router.replace('/channels/create')
-      return
-    }
+        if (!channels.length) {
+          router.replace('/channels/create')
+          return
+        }
 
-    const lastChannel = channels[0]
-    router.replace(`/channels/@${lastChannel.handle}`)
-  }, [channels, isLoading, router])
+        router.replace(`/channels/@${channels[0].handle}`)
+      } catch (e) {
+        router.replace('/channels/create')
+      }
+    })()
+  }, [dispatch, router])
 
   return <div className="channels-page" />
 }

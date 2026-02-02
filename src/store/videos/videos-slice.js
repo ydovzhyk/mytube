@@ -1,5 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { uploadVideo, getVideos, getMyChannelVideos, getSubscriptionVideos,deleteVideo } from './videos-operations'
+import {
+  uploadVideo,
+  getVideos,
+  getMyChannelVideos,
+  getSubscriptionVideos,
+  getVideosPicker,
+  deleteVideo,
+} from './videos-operations'
 
 const initialState = {
   error: null,
@@ -10,14 +17,36 @@ const initialState = {
   uploadProgress: 0,
 
   videos: [],
-  myChannelVideos: [],
   subscriptionVideos: [],
+
+  channelVideos: {
+    items: [],
+    page: 1,
+    limit: 20,
+    hasMore: true,
+    contextKey: null,
+  },
+
+  picker: {
+    channelId: null,
+    items: [],
+  },
 }
 
 const errMsg = (payload) =>
   payload?.data?.message || payload?.message || 'Oops, something went wrong, try again'
 
 const okMsg = (payload, fallback) => payload?.message || fallback
+
+function uniqById(arr) {
+  const map = new Map()
+  for (const it of arr) {
+    const id = it?._id || it?.id
+    if (!id) continue
+    if (!map.has(id)) map.set(id, it)
+  }
+  return Array.from(map.values())
+}
 
 const videos = createSlice({
   name: 'videos',
@@ -38,6 +67,18 @@ const videos = createSlice({
     resetUploadProgress: (state) => {
       state.uploadProgress = 0
     },
+    resetChannelVideos: (state, action) => {
+      const contextKey = action.payload || null
+      state.channelVideos.items = []
+      state.channelVideos.page = 1
+      state.channelVideos.limit = 20
+      state.channelVideos.hasMore = true
+      state.channelVideos.contextKey = contextKey
+    },
+    resetVideosPicker: (state) => {
+      state.picker.channelId = null
+      state.picker.items = []
+    },
   },
 
   extraReducers: (builder) => {
@@ -53,8 +94,6 @@ const videos = createSlice({
         state.uploadLoading = false
         state.message = okMsg(payload, 'Video uploaded')
         state.uploadProgress = 100
-
-        if (payload?.myChannelVideos) state.myChannelVideos = payload.myChannelVideos
       })
       .addCase(uploadVideo.rejected, (state, { payload }) => {
         state.uploadLoading = false
@@ -85,13 +124,51 @@ const videos = createSlice({
       })
       .addCase(getMyChannelVideos.fulfilled, (state, { payload }) => {
         state.loading = false
-        state.myChannelVideos = payload?.myChannelVideos ?? null
+        const mode = payload?.__mode || 'replace'
+        const items = payload?.items || payload?.myChannelVideos || []
+
+        if (mode === 'append') {
+          state.channelVideos.items = uniqById([...state.channelVideos.items, ...items])
+        } else {
+          state.channelVideos.items = Array.isArray(items) ? items : []
+        }
+
+        const page = Number(payload?.page || 1)
+        const limit = Number(payload?.limit || state.channelVideos.limit || 20)
+        const total = Number(payload?.total || 0)
+
+        state.channelVideos.page = page
+        state.channelVideos.limit = limit
+
+        if (typeof payload?.hasMore === 'boolean') {
+          state.channelVideos.hasMore = payload.hasMore
+        } else if (total) {
+          state.channelVideos.hasMore = page * limit < total
+        } else {
+          state.channelVideos.hasMore = Array.isArray(items) && items.length === limit
+        }
       })
       .addCase(getMyChannelVideos.rejected, (state, { payload }) => {
         state.loading = false
         state.error = errMsg(payload)
       })
-
+      // * Get Videos Picker (all channel videos for playlist form)
+      .addCase(getVideosPicker.pending, (state, { meta }) => {
+        state.loading = true
+        state.error = null
+        state.message = null
+        const chId = meta?.arg?.channelId || null
+        state.picker.channelId = chId
+      })
+      .addCase(getVideosPicker.fulfilled, (state, { payload }) => {
+        state.loading = false
+        const items = payload?.items || []
+        state.picker.items = Array.isArray(items) ? items : []
+      })
+      .addCase(getVideosPicker.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
+      })
       // * Get Subscription Videos
       .addCase(getSubscriptionVideos.pending, (state) => {
         state.loading = true
@@ -116,7 +193,6 @@ const videos = createSlice({
       .addCase(deleteVideo.fulfilled, (state, { payload }) => {
         state.loading = false
         state.message = okMsg(payload, 'Video deleted')
-        state.myChannelVideos = payload?.myChannelVideos ?? state.myChannelVideos
       })
       .addCase(deleteVideo.rejected, (state, { payload }) => {
         state.loading = false
@@ -127,4 +203,12 @@ const videos = createSlice({
 
 export default videos.reducer
 
-export const { clearVideosError, clearVideosMessage, setVideosError, setUploadProgress, resetUploadProgress } = videos.actions
+export const {
+  clearVideosError,
+  clearVideosMessage,
+  setVideosError,
+  setUploadProgress,
+  resetUploadProgress,
+  resetChannelVideos,
+  resetVideosPicker
+} = videos.actions

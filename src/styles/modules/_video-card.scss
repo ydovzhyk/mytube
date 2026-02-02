@@ -85,6 +85,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: $spacing-6;
+  min-height: 420px;
 
   @include sm {
     grid-template-columns: repeat(2, 1fr);

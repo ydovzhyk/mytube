@@ -6,34 +6,24 @@ import Avatar from '../avatar/Avatar'
 export default function VideoCard({ video }) {
   if (!video) return null
 
-  const thumb = video.thumbnailUrl || 'https://via.placeholder.com/640x360?text=No+thumbnail'
-
-  const avatar =
-    video.channel?.avatarUrl || `https://i.pravatar.cc/36?u=${video.channel?.id || video.id}`
-
-  const channelLabel = video.channel?.handle
-    ? `@${video.channel.handle}`
-    : video.channel?.name || 'Channel'
-
+  const thumb = video.thumbnailUrl
+  const ch = video.channelSnapshot
+  const avatar = ch.avatarUrl
+  const channelLabel = ch.handle ? `@${ch.handle}` : ch.name || ch.title || 'Channel'
+  const views = video?.stats?.views ?? 0
   const date = new Date(video.publishedAt || video.createdAt).toLocaleDateString()
+  const videoId = video._id || ''
 
   return (
     <div className="video-card">
-      <Link className="video-card__thumbLink" href={`/watch/${video._id || video.id || ''}`}>
+      <Link className="video-card__thumbLink" href={`/watch/${videoId}`}>
         <div className="video-card__thumbnail">
           <img src={thumb} alt={video.title} />
         </div>
       </Link>
 
       <div className="video-card__content">
-        <Avatar src={avatar} alt={video.channel?.name || 'Channel'} size="md" />
-        {/* <img
-          src={avatar}
-          alt={video.channel?.name || 'Channel'}
-          className="video-card__avatar"
-          width={36}
-          height={36}
-        /> */}
+        <Avatar src={avatar} alt={ch.name || 'Channel'} size="md" />
 
         <div className="video-card__info">
           <h3 className="video-card__title" title={video.title}>
@@ -43,7 +33,7 @@ export default function VideoCard({ video }) {
           <div className="video-card__channel">{channelLabel}</div>
 
           <p className="video-card__meta">
-            <span>{video.views ?? 0} views</span>
+            <span>{views} views</span>
             <span>{date}</span>
           </p>
         </div>

@@ -1,10 +1,16 @@
 @use '../variables' as *;
 @use '../mixins' as *;
 
+.upload-page {
+  margin-top: -12px;
+  padding: $spacing-6;
+}
+
 .upload-card {
   @include card;
   padding: $spacing-6;
   max-width: 720px;
+  margin: 0 auto;
 
   &__title {
     margin-bottom: $spacing-2;
@@ -68,6 +74,7 @@
   }
 }
 
+/* залишив як було (можеш потім видалити, якщо більше не використовуєш) */
 .upload-progress {
   position: relative;
   height: 10px;
@@ -89,6 +96,97 @@
   }
 }
 
+/* ✅ NEW: better upload UX */
+.upload-flow {
+  display: grid;
+  gap: $spacing-2;
+  padding: $spacing-3;
+  border-radius: $radius-md;
+  border: 1px solid $border-default;
+  background: $bg-secondary;
+}
+
+.upload-flow__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $spacing-3;
+}
+
+.upload-flow__title {
+  font-size: $text-sm;
+  color: $text-primary;
+}
+
+.upload-flow__meta {
+  font-size: $text-xs;
+  color: $text-muted;
+  white-space: nowrap;
+}
+
+.upload-flow__bar {
+  position: relative;
+  height: 7px;
+  border-radius: $radius-full;
+  background: $bg-tertiary;
+  overflow: hidden;
+}
+
+.upload-flow__fill {
+  height: 100%;
+  width: 0%;
+  background: $primary;
+  transition: width $transition-fast;
+}
+
+.upload-flow__fill--done {
+  background: $success;
+  width: 100%;
+}
+
+.upload-flow__fill--error {
+  background: $error;
+  width: 100%;
+}
+
+.upload-flow__fill--indeterminate {
+  width: 40%;
+  animation: upload-indeterminate 1.1s ease-in-out infinite;
+}
+
+@keyframes upload-indeterminate {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(260%); }
+}
+
+.upload-flow__steps {
+  display: flex;
+  gap: $spacing-2;
+  justify-content: space-between;
+  margin-top: $spacing-1;
+}
+
+.upload-step {
+  font-size: $text-xs;
+  color: $text-muted;
+  padding: 2px 10px;
+  border-radius: $radius-full;
+  border: 1px solid $border-default;
+  background: $bg-tertiary;
+}
+
+.upload-step--active {
+  color: $text-primary;
+  border-color: rgba($primary, 0.45);
+  background: rgba($primary, 0.10);
+}
+
+.upload-step--done {
+  color: $text-primary;
+  border-color: rgba($success, 0.45);
+  background: rgba($success, 0.10);
+}
+
 .upload-alert {
   padding: $spacing-3 $spacing-4;
   border-radius: $radius-md;
@@ -105,4 +203,29 @@
     border-color: rgba($success, 0.3);
     color: $text-primary;
   }
+}
+
+.upload-channel {
+  margin-bottom: 30px;
+}
+
+.upload-channel__label {
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  color: $text-secondary;
+  margin-bottom: $spacing-2;
+}
+
+.upload-channel__value {
+  color: $text-primary;
+  font-weight: $font-medium;
+  line-height: 1.3;
+}
+
+.upload-channel__value--bad {
+  color: $error;
+}
+
+.upload-channel__muted {
+  color: $text-secondary;
 }

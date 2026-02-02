@@ -32,9 +32,6 @@ const channelsSlice = createSlice({
     clearChannelsMessage(state) {
       state.message = null
     },
-    channelsBoot(state) {
-      state.loading = true
-    },
     clearChannelByHandle(state) {
       state.channelByHandle = null
     },
@@ -128,4 +125,4 @@ const channelsSlice = createSlice({
 })
 
 export default channelsSlice.reducer
-export const { clearChannelsError, clearChannelsMessage, channelsBoot, clearChannelByHandle } = channelsSlice.actions
+export const { clearChannelsError, clearChannelsMessage, clearChannelByHandle } = channelsSlice.actions

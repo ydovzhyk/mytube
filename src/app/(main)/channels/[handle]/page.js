@@ -8,11 +8,11 @@ import Link from 'next/link'
 import { getChannels } from '@/store/channel/channel-selectors'
 import { useTranslate } from '@/utils/translating/translating'
 
-import VideoCard from '@/common/shared/video-card/VideoCard'
 import Button from '@/common/shared/button/Button'
 import T from '@/common/shared/i18n/T'
+import ChannelVideosSection from '@/common/components/channels/ChannelVideosSection'
 
-import { HiSearch, HiCog } from 'react-icons/hi'
+import { HiCog } from 'react-icons/hi'
 
 const DESC_LIMIT = 320
 const BIO_LIMIT = 140
@@ -20,12 +20,6 @@ const BIO_LIMIT = 140
 function safeHandle(raw = '') {
   const decoded = decodeURIComponent(String(raw || ''))
   return decoded.replace(/^@+/, '').trim().toLowerCase()
-}
-
-function getVideoDateMs(v) {
-  const d = v?.publishedAt || v?.createdAt
-  const ms = d ? new Date(d).getTime() : 0
-  return Number.isFinite(ms) ? ms : 0
 }
 
 function normalizeUrl(url = '') {
@@ -61,10 +55,6 @@ export default function ChannelHandlePage() {
   const [showMoreBio, setShowMoreBio] = useState(false)
   const [showMoreDesc, setShowMoreDesc] = useState(false)
 
-  const [sort, setSort] = useState('latest')
-  const [query, setQuery] = useState('')
-
-  const placeholderSearch = useTranslate('Search in this channel')
   const more = useTranslate('...more')
   const less = useTranslate('less')
 
@@ -89,34 +79,6 @@ export default function ChannelHandlePage() {
 
   const links = Array.isArray(channel?.links) ? channel.links : []
   const contactEmail = String(channel?.contactEmail || '').trim()
-
-  const videosRaw = channel?.latestVideos || []
-
-  const videosPrepared = useMemo(() => {
-    const arr = Array.isArray(videosRaw) ? [...videosRaw] : []
-
-    // sort
-    if (sort === 'popular') {
-      arr.sort((a, b) => (b?.views || 0) - (a?.views || 0))
-    } else if (sort === 'oldest') {
-      arr.sort((a, b) => getVideoDateMs(a) - getVideoDateMs(b))
-    } else {
-      arr.sort((a, b) => getVideoDateMs(b) - getVideoDateMs(a))
-    }
-
-    // search
-    const q = String(query || '')
-      .trim()
-      .toLowerCase()
-    if (!q) return arr
-
-    return arr.filter((v) => {
-      const title = String(v?.title || '').toLowerCase()
-      const desc = String(v?.description || '').toLowerCase()
-      const tags = Array.isArray(v?.tags) ? v.tags.join(' ').toLowerCase() : ''
-      return title.includes(q) || desc.includes(q) || tags.includes(q)
-    })
-  }, [videosRaw, sort, query])
 
   useEffect(() => {
     if (!isSettingsOpen) return
@@ -179,10 +141,8 @@ export default function ChannelHandlePage() {
           </div>
 
           <div className="channel-hero__meta">
-            {/* NAME (big) */}
             <h1 className="channel-hero__name">{channel.name || channel.title}</h1>
 
-            {/* @handle + stats */}
             <div className="channel-hero__stats">
               <span className="channel-hero__handle">@{channel.handle || handle}</span>
               <span className="channel-hero__dot">•</span>
@@ -221,7 +181,7 @@ export default function ChannelHandlePage() {
                   return (
                     <a
                       key={`${url}-${idx}`}
-                      className="channel-hero__link"
+                      className="channel-hero__contactBtn"
                       href={url}
                       target="_blank"
                       rel="noreferrer"
@@ -249,6 +209,7 @@ export default function ChannelHandlePage() {
               <Button variant="primary" height="40px" disabled>
                 <T>Subscribe</T>
               </Button>
+
               <div className="channel-settings" ref={settingsRef}>
                 <Button
                   variant="primary"
@@ -272,7 +233,7 @@ export default function ChannelHandlePage() {
                     </Link>
 
                     <Link
-                      href={`/studio/upload?channel=@${channel.handle}`}
+                      href={`/channels/@${channel.handle}/upload`}
                       className="channel-settings__item"
                       onClick={() => setIsSettingsOpen(false)}
                     >
@@ -314,7 +275,7 @@ export default function ChannelHandlePage() {
                       className="channel-settings__item channel-settings__item--danger"
                       onClick={() => {
                         setIsSettingsOpen(false)
-                        // TODO: confirm modal
+                        // TODO confirm modal
                       }}
                     >
                       <T caseMode="sentence">delete channel</T>
@@ -346,55 +307,9 @@ export default function ChannelHandlePage() {
         </div>
       ) : null}
 
-      {/* Tabs + Search */}
-      <div className="channel-tabs">
-        <button className="channel-tabs__item channel-tabs__item--active" type="button">
-          <T>Videos</T>
-        </button>
-
-        <form className="channel-search" onSubmit={(e) => e.preventDefault()}>
-          <HiSearch className="channel-search__icon" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={placeholderSearch}
-            className="channel-search__input"
-          />
-        </form>
-      </div>
-
-      {/* Sort */}
-      <div className="channel-sort">
-        {[
-          { key: 'latest', label: 'Latest' },
-          { key: 'popular', label: 'Popular' },
-          { key: 'oldest', label: 'Oldest' },
-        ].map((it) => (
-          <button
-            key={it.key}
-            type="button"
-            className={
-              sort === it.key
-                ? 'channel-sort__pill channel-sort__pill--active'
-                : 'channel-sort__pill'
-            }
-            onClick={() => setSort(it.key)}
-          >
-            <T>{it.label}</T>
-          </button>
-        ))}
-      </div>
-
-      {/* Videos */}
-      <div className="video-grid">
-        {videosPrepared?.length ? (
-          videosPrepared.map((v) => <VideoCard key={v._id || v.id} video={v} />)
-        ) : (
-          <div className="channel-empty">
-            <T>{query ? 'No results' : 'No videos yet'}</T>
-          </div>
-        )}
-      </div>
+      {/* VIDEOS (owner: all videos) */}
+      <ChannelVideosSection channelId={channel._id} publishedOnly={false} />
     </div>
   )
 }
+

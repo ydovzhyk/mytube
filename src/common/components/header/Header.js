@@ -26,6 +26,9 @@ export function Header({ onMenuClick }) {
   const isLoggedIn = useSelector(getLogin)
   const user = useSelector(getUser)
   const tSearchPlaceholder = useTranslate('Search videos, channels...')
+  const tAddChannel = useTranslate('add channel')
+  const tYourChannel = useTranslate('your channel')
+  const tYourChannels = useTranslate('your channels')
 
   useEffect(() => {
     function handleOutsideClick(event) {
@@ -121,7 +124,7 @@ export function Header({ onMenuClick }) {
                       const count = Array.isArray(channelIds) ? channelIds.length : 0
 
                       const label =
-                        count === 0 ? 'add channel' : count === 1 ? 'your channel' : 'your channels'
+                        count === 0 ? tAddChannel : count === 1 ? tYourChannel : tYourChannels
 
                       return (
                         <Link

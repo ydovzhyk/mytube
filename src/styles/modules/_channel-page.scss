@@ -2,7 +2,7 @@
 @use '../mixins' as *;
 
 .channel-page {
-  margin-top: -35px;
+  margin-top: -10px;
   padding: $spacing-6;
 }
 
@@ -107,17 +107,6 @@
     gap: 10px 16px;
     align-items: center;
     margin-bottom: $spacing-4;
-  }
-
-  &__link {
-    display: inline-block;
-    color: $primary-light;
-    font-size: $text-sm;
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
   }
 
   &__contactBtn {
@@ -276,6 +265,7 @@
   padding: $spacing-10 0;
   text-align: center;
   color: $text-secondary;
+  min-height: 320px;
 }
 
 .channel-settings {

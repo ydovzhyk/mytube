@@ -5,6 +5,7 @@ import {
   axiosGetMyChannelVideos,
   axiosGetSubscriptionVideos,
   axiosGetVideos,
+  axiosGetVideosPicker,
 } from '@/lib/api/videos'
 import { setUploadProgress } from './videos-slice'
 
@@ -51,8 +52,22 @@ export const getMyChannelVideos = createAsyncThunk(
   'videos/get-my-channel-videos',
   async (params, { rejectWithValue }) => {
     try {
-      // params наприклад: { channelId } або { sid } — залежно від сервера
+      // params:
+      // { channelId, publishedOnly, sort, query, page, limit, mode }
       const data = await axiosGetMyChannelVideos(params)
+      return { ...data, __mode: params?.mode || 'replace' }
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
+
+export const getVideosPicker = createAsyncThunk(
+  'videos/get-videos-picker',
+  async (params, { rejectWithValue }) => {
+    try {
+      // params: { channelId }
+      const data = await axiosGetVideosPicker(params)
       return data
     } catch (e) {
       return toReject(e, rejectWithValue)
