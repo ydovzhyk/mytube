@@ -62,4 +62,12 @@ export const axiosDeleteVideo = async (params) => {
   return data
 }
 
+export const axiosVideoView = async (videoId) => {
+  const id = String(videoId || '').trim()
+  if (!id) throw new Error('Video id is required')
+
+  const { data } = await instance.post(`/videos/view-count/${id}`, null)
+  return data
+}
+
 

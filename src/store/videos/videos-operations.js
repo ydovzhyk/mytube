@@ -6,6 +6,7 @@ import {
   axiosGetSubscriptionVideos,
   axiosGetVideos,
   axiosGetVideosPicker,
+  axiosVideoView,
 } from '@/lib/api/videos'
 import { setUploadProgress } from './videos-slice'
 
@@ -93,6 +94,18 @@ export const deleteVideo = createAsyncThunk(
     try {
       // params: { videoId } або { id } — як у твоєму API
       const data = await axiosDeleteVideo(params)
+      return data
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
+
+export const videoView = createAsyncThunk(
+  'videos/view-count',
+  async (videoId, { rejectWithValue }) => {
+    try {
+      const data = await axiosVideoView(videoId)
       return data
     } catch (e) {
       return toReject(e, rejectWithValue)

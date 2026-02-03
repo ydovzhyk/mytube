@@ -9,7 +9,7 @@
 .playlist-card {
   @include card;
   padding: $spacing-6;
-  max-width: 860px;
+  max-width: 720px;
   margin: 0 auto;
 
   &__title {

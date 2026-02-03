@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 
 export default function Button({
+  maxWidth = '100%',
   variant = 'primary',
   size = 'md',
   isLoading = false,
@@ -28,6 +29,7 @@ export default function Button({
         className
       )}
       style={{
+        maxWidth,
         ...(height ? { height } : null),
         ...style,
       }}

@@ -593,6 +593,7 @@ export default function ChannelForm({ mode = 'create' }) {
           variant="primary"
           fullWidth
           height="40px"
+          maxWidth="300px"
           disabled={disabled || (mode === 'create' && !banner)}
         >
           <T>{mode === 'edit' ? 'Save changes' : 'Create'}</T>

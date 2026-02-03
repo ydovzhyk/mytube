@@ -312,6 +312,7 @@ export default function VideoUploadForm() {
           variant="primary"
           fullWidth
           height="40px"
+          maxWidth="300px"
           disabled={disabled || !canUpload}
         >
           <T>Upload</T>

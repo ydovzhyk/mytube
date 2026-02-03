@@ -57,7 +57,6 @@ function nextAvailableOrder(selectedMap) {
   return i
 }
 
-// ✅ key-based local state reset (no setState in effects)
 function useResettableState(initialValue, resetKey) {
   const [state, setState] = useState(initialValue)
   const [prevKey, setPrevKey] = useState(resetKey)
@@ -83,7 +82,9 @@ export default function PlaylistCreateForm() {
   const message = useSelector(getVideosMessage)
 
   const pickerItems = useSelector(getVideosPickerItems)
+  console.log('pickerItems:', pickerItems)
   const pickerChannelId = useSelector(getVideosPickerChannelId)
+
 
   const activeHandleFromPath = useMemo(() => parseActiveHandle(pathname), [pathname])
 
@@ -93,7 +94,6 @@ export default function PlaylistCreateForm() {
   }, [channels, activeHandleFromPath])
 
   const selectionResetKey = useMemo(() => String(activeChannel?._id || ''), [activeChannel?._id])
-
   const [selected, setSelected] = useResettableState({}, selectionResetKey)
 
   // playlist cover (required at creation)
@@ -105,10 +105,12 @@ export default function PlaylistCreateForm() {
   }, [coverFile])
 
   const titlePlaceholder = useTranslate('Give your playlist a name')
-  const descPleaceholder = useTranslate('Optional')
+  const descPlaceholder = useTranslate('Optional')
+
   const {
     register,
     handleSubmit,
+    watch,
     setValue,
     setError,
     clearErrors,
@@ -124,6 +126,8 @@ export default function PlaylistCreateForm() {
       channelRef: '',
     },
   })
+
+  const watchedTitle = watch('title')
 
   // channelRef + handle validation (like upload form)
   useEffect(() => {
@@ -152,12 +156,10 @@ export default function PlaylistCreateForm() {
 
     const chId = String(activeChannel._id)
 
-    // if picker in store belongs to another channel — reset store picker
     if (pickerChannelId && String(pickerChannelId) !== chId) {
       dispatch(resetVideosPicker())
     }
 
-    // avoid refetch if store already has picker for this channel and items exist
     const alreadyForThisChannel = String(pickerChannelId || '') === chId
     const hasItems = Array.isArray(pickerItems) && pickerItems.length > 0
     if (alreadyForThisChannel && hasItems) return
@@ -173,6 +175,17 @@ export default function PlaylistCreateForm() {
   }, [selected])
 
   const nextOrder = useMemo(() => nextAvailableOrder(selected), [selected])
+
+  // ✅ selected items for submit + for button state
+  const selectedItems = useMemo(() => sortSelectedItems(selected), [selected])
+
+  // ✅ button active only when form is really ready
+  const hasChannel = Boolean(activeChannel?._id) && !errors.channelRef?.message
+  const hasTitle = String(watchedTitle || '').trim().length >= 2
+  const hasCover = Boolean(coverFile)
+  const hasAtLeastOneVideo = selectedItems.length > 0
+
+  const canSubmit = hasChannel && hasTitle && hasCover && hasAtLeastOneVideo && !disabled
 
   const onToggleInclude = (videoId) => {
     setSelected((prev) => {
@@ -297,7 +310,7 @@ export default function PlaylistCreateForm() {
           as="textarea"
           rows={5}
           label={<T>Description</T>}
-          placeholder={descPleaceholder}
+          placeholder={descPlaceholder}
           {...register('description', { maxLength: { value: 5000, message: 'Max 5000 chars' } })}
           error={errors.description?.message}
         />
@@ -443,7 +456,13 @@ export default function PlaylistCreateForm() {
         {error ? <div className="playlist-alert playlist-alert--error">{error}</div> : null}
         {message ? <div className="playlist-alert playlist-alert--ok">{message}</div> : null}
 
-        <Button type="submit" variant="primary" fullWidth height="40px" disabled={disabled}>
+        <Button
+          type="submit"
+          variant="primary"
+          height="40px"
+          maxWidth="300px"
+          disabled={!canSubmit}
+        >
           <T>Create playlist</T>
         </Button>
       </form>

@@ -29,9 +29,14 @@
 
 .upload-file {
   display: flex;
-  gap: $spacing-3;
   align-items: center;
+  gap: $spacing-3;
   padding: $spacing-3;
+
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+
   border: 1px dashed $border-default;
   border-radius: $radius-md;
   background: $bg-secondary;
@@ -41,12 +46,13 @@
   }
 
   &__btn {
+    flex: 0 0 auto;
     padding: $spacing-2 $spacing-4;
     border-radius: $radius-md;
     background: $bg-tertiary;
     border: 1px solid $border-default;
-    transition: all $transition-fast;
     white-space: nowrap;
+    transition: all $transition-fast;
 
     &:hover {
       background: $bg-hover;
@@ -54,11 +60,16 @@
   }
 
   &__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: block;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
     color: $text-secondary;
     font-size: $text-sm;
-    @include text-ellipsis;
-    min-width: 0;
-    flex: 1;
   }
 }
 
@@ -74,29 +85,6 @@
   }
 }
 
-/* залишив як було (можеш потім видалити, якщо більше не використовуєш) */
-.upload-progress {
-  position: relative;
-  height: 10px;
-  border-radius: $radius-full;
-  background: $bg-tertiary;
-  overflow: hidden;
-
-  &__bar {
-    height: 100%;
-    background: $primary;
-    transition: width $transition-fast;
-  }
-
-  &__text {
-    margin-top: $spacing-2;
-    display: inline-block;
-    font-size: $text-xs;
-    color: $text-muted;
-  }
-}
-
-/* ✅ NEW: better upload UX */
 .upload-flow {
   display: grid;
   gap: $spacing-2;
@@ -155,14 +143,18 @@
 }
 
 @keyframes upload-indeterminate {
-  0% { transform: translateX(-120%); }
-  100% { transform: translateX(260%); }
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
 }
 
 .upload-flow__steps {
   display: flex;
-  gap: $spacing-2;
   justify-content: space-between;
+  gap: $spacing-2;
   margin-top: $spacing-1;
 }
 
@@ -229,3 +221,4 @@
 .upload-channel__muted {
   color: $text-secondary;
 }
+
