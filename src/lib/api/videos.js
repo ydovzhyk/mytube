@@ -23,14 +23,12 @@ export const axiosGetVideos = async (params) => {
   const { data } = await instance.get('/videos', {
     params: cleanParams(params),
   })
-  console.log('axiosGetVideos data:', data)
   return data
 }
 
 export const axiosGetMyChannelVideos = async (params) => {
   const isOwner = params?.publishedOnly === false
   const url = isOwner ? '/videos/channel/owner' : '/videos/channel'
-
   const { data } = await instance.get(url, {
     params: cleanParams(params),
   })
@@ -45,7 +43,6 @@ export const axiosGetSubscriptionVideos = async (params) => {
 }
 
 export const axiosGetVideosPicker = async (params) => {
-  // params: { channelId }
   const { data } = await instance.get('/videos/picker', {
     params: cleanParams(params),
   })
@@ -57,7 +54,6 @@ export const axiosDeleteVideo = async (params) => {
   if (!id) {
     throw new Error('Video id is required')
   }
-
   const { data } = await instance.delete(`/videos/${id}`)
   return data
 }
@@ -65,9 +61,33 @@ export const axiosDeleteVideo = async (params) => {
 export const axiosVideoView = async (videoId) => {
   const id = String(videoId || '').trim()
   if (!id) throw new Error('Video id is required')
-
   const { data } = await instance.post(`/videos/view-count/${id}`, null)
   return data
 }
 
+export const axiosGetWatchVideo = async ({ id, list } = {}) => {
+  const videoId = String(id || '').trim()
+  if (!videoId) throw new Error('Video id is required')
+  const { data } = await instance.get(`/videos/${videoId}`, {
+    params: cleanParams({ list }),
+  })
+  return data
+}
 
+// helper: watchedIds -> "id1,id2,id3"
+const watchedIdsToCsv = (watchedIds) => {
+  if (!Array.isArray(watchedIds)) return undefined
+  const ids = watchedIds
+    .map((x) => String(x || '').trim())
+    .filter(Boolean)
+  return ids.length ? ids.join(',') : undefined
+}
+
+export const axiosGetSimilarVideos = async ({ id, cursor, filter, watchedIds } = {}) => {
+  const videoId = String(id || '').trim()
+  const watchedIdsCsv = watchedIdsToCsv(watchedIds)
+  const { data } = await instance.get(`/videos/${videoId}/similar`, {
+    params: cleanParams({ cursor, filter, watchedIds: watchedIdsCsv }),
+  })
+  return data
+}

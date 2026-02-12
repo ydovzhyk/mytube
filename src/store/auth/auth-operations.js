@@ -4,6 +4,7 @@ import {
   axiosLogin,
   axiosLogout,
   axiosGetCurrentUser,
+  axiosEditUser,
   axiosUpdateUser,
   axiosDeleteUser,
 } from '../../lib/api/auth';
@@ -66,12 +67,23 @@ export const getCurrentUser = createAsyncThunk(
   }
 )
 
-export const updateUser = createAsyncThunk(
+export const editUser = createAsyncThunk(
   'auth/edit',
-  async (userData, { dispatch, rejectWithValue }) => {
+  async (userData, { rejectWithValue }) => {
+    try {
+      const data = await axiosEditUser(userData)
+      return data
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+);
+
+export const updateUser = createAsyncThunk(
+  'auth/update',
+  async (userData, { rejectWithValue }) => {
     try {
       const data = await axiosUpdateUser(userData)
-      dispatch(getCurrentUser())
       return data
     } catch (e) {
       return toReject(e, rejectWithValue)

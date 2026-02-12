@@ -1,0 +1,173 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.mini-video-card {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: $text-primary;
+  text-align: left;
+
+  display: grid;
+  grid-template-columns: 168px 1fr;
+  gap: $spacing-3;
+
+  padding: $spacing-2;
+  border-radius: $radius-lg;
+  transition: background $transition-fast;
+  border: 1px solid $border-hover;
+
+  &:hover {
+    background: $bg-hover;
+  }
+
+  &:hover .mini-video-card__meta {
+    color: $text-secondary;
+  }
+
+  &--active {
+    background: rgba($primary, 0.14);
+    outline: 1px solid rgba($primary, 0.25);
+  }
+
+  &--sm {
+    grid-template-columns: 150px 1fr;
+
+    .mini-video-card__thumb {
+      height: 84px;
+    }
+
+    .mini-video-card__title {
+      font-size: $text-xs;
+    }
+  }
+
+  &__thumb {
+    position: relative;
+    height: 92px;
+    border-radius: $radius-md;
+    overflow: hidden;
+    background: $bg-tertiary;
+    flex-shrink: 0;
+    display: block;
+  }
+
+  &__img {
+    object-fit: cover;
+  }
+
+  &__thumbFallback {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, $bg-tertiary 0%, $bg-hover 50%, $bg-tertiary 100%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+  }
+
+  &__badge {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: $font-medium;
+    border-radius: $radius-full;
+    border: 1px solid $border-default;
+    backdrop-filter: blur(2px);
+    line-height: 1;
+  }
+
+  &__badge--published {
+    background: rgba($success, 0.18);
+    border-color: rgba($success, 0.45);
+    color: $text-primary;
+  }
+
+  &__badge--draft {
+    background: rgba($bg-secondary, 0.75);
+    border-color: $border-default;
+    color: $text-secondary;
+  }
+
+  &__duration {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+
+    padding: 3px 6px;
+    border-radius: $radius-sm;
+
+    background: rgba(0, 0, 0, 0.38);
+    backdrop-filter: blur(2px);
+    color: #fff;
+
+    font-size: 12px;
+    font-weight: $font-medium;
+    line-height: 1;
+    letter-spacing: 0.2px;
+
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+  }
+
+  &__info {
+    min-width: 0;
+    @include flex-column;
+    gap: $spacing-1;
+  }
+
+  &__title {
+    font-size: $text-sm;
+    font-weight: $font-medium;
+    @include line-clamp(2);
+    color: $text-primary;
+    line-height: $leading-tight;
+  }
+
+  &__titleLink {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+
+    &:hover .mini-video-card__title {
+      text-underline-offset: 2px;
+    }
+  }
+
+  &__channel {
+    font-size: $text-xs;
+    color: $text-secondary;
+    @include text-ellipsis;
+  }
+
+  &__channelLink {
+    display: inline-block;
+    color: inherit;
+    text-decoration: none;
+
+    &:hover .mini-video-card__channel {
+      color: $text-primary;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  }
+
+  &__meta {
+    font-size: $text-xs;
+    color: $text-muted;
+
+    span + span::before {
+      content: '•';
+      margin: 0 $spacing-1;
+    }
+  }
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

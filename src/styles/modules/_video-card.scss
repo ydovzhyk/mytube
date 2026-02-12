@@ -27,13 +27,23 @@
 
   &__duration {
     position: absolute;
-    bottom: $spacing-2;
-    right: $spacing-2;
-    padding: $spacing-1 $spacing-2;
-    background: rgba(0, 0, 0, 0.8);
+    right: 8px;
+    bottom: 8px;
+
+    padding: 3px 6px;
     border-radius: $radius-sm;
-    font-size: $text-xs;
+
+    background: rgba(0, 0, 0, 0.38);
+    backdrop-filter: blur(2px);
+    color: #fff;
+
+    font-size: 12px;
     font-weight: $font-medium;
+    line-height: 1;
+    letter-spacing: 0.2px;
+
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
   }
 
   &__content {

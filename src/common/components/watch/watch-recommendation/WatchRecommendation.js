@@ -1,0 +1,142 @@
+'use client'
+
+import { useCallback, useMemo } from 'react'
+import clsx from 'clsx'
+import { useDispatch, useSelector } from 'react-redux'
+import readWatchHistory from '@/utils/read-watch-history'
+import { useTranslate } from '@/utils/translating/translating'
+
+import { getSimilarVideos } from '@/store/videos/videos-operations'
+import {
+  getVideosLoading,
+  getWatchSimilarItems,
+  getWatchSimilarHasMore,
+  getWatchSimilarNextCursor,
+  getWatchSimilarFilter,
+} from '@/store/videos/videos-selectors'
+import { setWatchSimilarFilter } from '@/store/videos/videos-slice'
+
+import Button from '@/common/shared/button/Button'
+import MiniVideoCard from '@/common/shared/mini-video-card/MiniVideoCard'
+import T from '@/common/shared/i18n/T'
+
+const FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'related', label: 'Related' },
+  { key: 'from_channel', label: 'From this channel' },
+  { key: 'watched', label: 'Watched' },
+  { key: 'recent', label: 'Recently uploaded' },
+]
+
+export default function WatchRecommendation({
+  videoId,
+  currentId,
+  onSelectVideo,
+}) {
+  const dispatch = useDispatch()
+
+  const loading = useSelector(getVideosLoading)
+  const items = useSelector(getWatchSimilarItems)
+  const hasMore = useSelector(getWatchSimilarHasMore)
+  const nextCursor = useSelector(getWatchSimilarNextCursor)
+  const filter = useSelector(getWatchSimilarFilter)
+
+  const labelRec = useTranslate('less')
+
+  const list = useMemo(() => {
+    const arr = Array.isArray(items) ? items : []
+    if (!currentId) return arr
+    return arr.filter((x) => String(x?._id) !== String(currentId))
+  }, [items, currentId])
+
+  const applyFilter = useCallback(
+    (nextFilter) => {
+      if (!videoId) return
+      const f = nextFilter || 'all'
+
+      const watchedIds =
+        f === 'watched'
+          ? readWatchHistory()
+              .map((x) => x.videoId)
+              .filter((vid) => String(vid) !== String(currentId))
+          : undefined
+
+      dispatch(setWatchSimilarFilter(f))
+      dispatch(
+        getSimilarVideos({
+          id: videoId,
+          cursor: null,
+          filter: f,
+          watchedIds,
+        })
+      )
+    },
+    [dispatch, videoId, currentId]
+  )
+
+  const onLoadMore = useCallback(() => {
+    if (!videoId) return
+    if (!hasMore) return
+    if (loading) return
+
+    const watchedIds =
+      filter === 'watched'
+        ? readWatchHistory()
+            .map((x) => x.videoId)
+            .filter((vid) => String(vid) !== String(currentId))
+        : undefined
+
+    dispatch(
+      getSimilarVideos({
+        id: videoId,
+        cursor: nextCursor,
+        filter,
+        watchedIds,
+      })
+    )
+  }, [dispatch, videoId, hasMore, loading, nextCursor, filter, currentId])
+
+  return (
+    <div className="watch-reco">
+      <div className="watch-reco__top">
+        <div className="watch-reco__filters" role="tablist" aria-label={labelRec}>
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              className={clsx(
+                'watch-reco__filter',
+                filter === f.key && 'watch-reco__filter--active'
+              )}
+              onClick={() => applyFilter(f.key)}
+              role="tab"
+              aria-selected={filter === f.key}
+            >
+              <T>{f.label}</T>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="watch-reco__list">
+        {list.map((v) => (
+          <MiniVideoCard
+            key={v._id}
+            video={v}
+            onClick={() => onSelectVideo?.(v._id)}
+            active={false}
+            showChannel
+          />
+        ))}
+      </div>
+
+      {hasMore ? (
+        <div className="watch-reco__more">
+          <Button variant="secondary" type="button" onClick={onLoadMore} disabled={loading}>
+            {loading ? <T>Loading...</T> : <T>More</T>}
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  )
+}

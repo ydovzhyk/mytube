@@ -7,7 +7,10 @@ import {
   axiosGetVideos,
   axiosGetVideosPicker,
   axiosVideoView,
+  axiosGetWatchVideo,
+  axiosGetSimilarVideos,
 } from '@/lib/api/videos'
+import { axiosCreatePlaylist } from '@/lib/api/playlists'
 import { setUploadProgress } from './videos-slice'
 
 const toReject = (error, rejectWithValue) => {
@@ -53,8 +56,6 @@ export const getMyChannelVideos = createAsyncThunk(
   'videos/get-my-channel-videos',
   async (params, { rejectWithValue }) => {
     try {
-      // params:
-      // { channelId, publishedOnly, sort, query, page, limit, mode }
       const data = await axiosGetMyChannelVideos(params)
       return { ...data, __mode: params?.mode || 'replace' }
     } catch (e) {
@@ -67,8 +68,55 @@ export const getVideosPicker = createAsyncThunk(
   'videos/get-videos-picker',
   async (params, { rejectWithValue }) => {
     try {
-      // params: { channelId }
       const data = await axiosGetVideosPicker(params)
+      return data
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
+
+export const videoView = createAsyncThunk(
+  'videos/view-count',
+  async (videoId, { rejectWithValue }) => {
+    try {
+      await axiosVideoView(videoId)
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
+
+export const getWatchVideo = createAsyncThunk(
+  'videos/get-watch-video',
+  async (params, { rejectWithValue }) => {
+    try {
+      const data = await axiosGetWatchVideo(params)
+      return data
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
+
+export const getSimilarVideos = createAsyncThunk(
+  'videos/get-similar-videos',
+  async (params, { rejectWithValue }) => {
+    try {
+      // params: { id, cursor }
+      const data = await axiosGetSimilarVideos(params)
+      return data
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
+
+export const createPlaylist = createAsyncThunk(
+  'videos/create-playlist',
+  async (formData, { rejectWithValue }) => {
+    try {
+      const data = await axiosCreatePlaylist(formData)
       return data
     } catch (e) {
       return toReject(e, rejectWithValue)
@@ -94,18 +142,6 @@ export const deleteVideo = createAsyncThunk(
     try {
       // params: { videoId } або { id } — як у твоєму API
       const data = await axiosDeleteVideo(params)
-      return data
-    } catch (e) {
-      return toReject(e, rejectWithValue)
-    }
-  }
-)
-
-export const videoView = createAsyncThunk(
-  'videos/view-count',
-  async (videoId, { rejectWithValue }) => {
-    try {
-      const data = await axiosVideoView(videoId)
       return data
     } catch (e) {
       return toReject(e, rejectWithValue)

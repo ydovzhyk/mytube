@@ -199,7 +199,6 @@ export function setupInterceptors(store) {
   )
 }
 
-
 export const axiosRegister = async userData => {
   const { data } = await instance.post('/auth/register', userData);
   return data;
@@ -220,10 +219,15 @@ export const axiosGetCurrentUser = async () => {
   return data;
 };
 
-export const axiosUpdateUser = async userData => {
+export const axiosEditUser = async userData => {
   const { data } = await instance.post('/auth/edit', userData);
   return data;
 };
+
+export const axiosUpdateUser = async (userData) => {
+  const { data } = await instance.post('/auth/update', userData)
+  return data
+}
 
 export const axiosDeleteUser = async id => {
   const { data } = await instance.delete(`/auth/delete/${id}`);

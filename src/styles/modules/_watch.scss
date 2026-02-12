@@ -19,6 +19,37 @@
     @include flex-column;
     gap: $spacing-4;
   }
+
+  &__sidebarSection {
+    @include flex-column;
+    gap: $spacing-3;
+  }
+
+  &__subTitle {
+    font-size: $text-lg;
+    font-weight: $font-semibold;
+  }
+
+  &__subTitleRow {
+    @include flex-between;
+    gap: $spacing-3;
+    align-items: center;
+  }
+
+  &__closePlaylist {
+    @include button-ghost;
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-full;
+    font-size: 22px;
+    line-height: 1;
+    color: $text-secondary;
+
+    &:hover {
+      color: $text-primary;
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
 }
 
 .video-info {

@@ -9,7 +9,6 @@ import VideoCard from '@/common/shared/video-card/VideoCard'
 export default function HomePage() {
   const dispatch = useDispatch()
   const videos = useSelector(getVideosList)
-  console.log('Videos on HomePage:', videos)
 
   useEffect(() => {
     dispatch(getVideos())

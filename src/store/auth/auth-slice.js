@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { registration, login, logout, getCurrentUser, updateUser, deleteUser } from './auth-operations'
+import { registration, login, logout, getCurrentUser, editUser, updateUser, deleteUser } from './auth-operations'
 
 const initialState = {
   user: {},
@@ -103,17 +103,30 @@ const auth = createSlice({
         state.user = {}
         state.error = null
       })
+
       // UPDATE USER
       .addCase(updateUser.pending, (state) => {
-        state.loading = true
         state.error = null
         state.message = null
       })
       .addCase(updateUser.fulfilled, (state, { payload }) => {
+        state.user = { ...state.user, ...payload?.user }
+      })
+      .addCase(updateUser.rejected, (state, { payload }) => {
+        state.error = errMsg(payload)
+      })
+
+      // EDIT USER
+      .addCase(editUser.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.message = null
+      })
+      .addCase(editUser.fulfilled, (state, { payload }) => {
         state.loading = false
         state.message = okMsg(payload, 'Profile updated')
       })
-      .addCase(updateUser.rejected, (state, { payload }) => {
+      .addCase(editUser.rejected, (state, { payload }) => {
         state.loading = false
         state.error = errMsg(payload)
       })

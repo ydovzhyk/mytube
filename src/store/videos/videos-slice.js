@@ -5,16 +5,18 @@ import {
   getMyChannelVideos,
   getSubscriptionVideos,
   getVideosPicker,
+  getWatchVideo,
+  getSimilarVideos,
   deleteVideo,
 } from './videos-operations'
 
 const initialState = {
   error: null,
   message: null,
-
   loading: false,
   uploadLoading: false,
   uploadProgress: 0,
+  showPlaylist: true,
 
   videos: [],
   subscriptionVideos: [],
@@ -30,6 +32,19 @@ const initialState = {
   picker: {
     channelId: null,
     items: [],
+  },
+
+  watch: {
+    currentVideo: null,
+    playlist: null,
+    listId: null,
+
+    similar: {
+      items: [],
+      hasMore: false,
+      nextCursor: null,
+      filter: 'all',
+    },
   },
 }
 
@@ -78,6 +93,29 @@ const videos = createSlice({
     resetVideosPicker: (state) => {
       state.picker.channelId = null
       state.picker.items = []
+    },
+    resetWatch: (state) => {
+      state.watch.currentVideo = null
+      state.watch.playlist = null
+      state.watch.listId = null
+
+      state.watch.similar.items = []
+      state.watch.similar.hasMore = false
+      state.watch.similar.nextCursor = null
+    },
+    setWatchSimilarFilter: (state, action) => {
+      state.watch.similar.filter = action.payload || 'all'
+      state.watch.similar.items = []
+      state.watch.similar.hasMore = false
+      state.watch.similar.nextCursor = null
+    },
+    resetWatchSimilar: (state) => {
+      state.watch.similar.items = []
+      state.watch.similar.hasMore = false
+      state.watch.similar.nextCursor = null
+    },
+    setShowPlaylist: (state, action) => {
+      state.showPlaylist = Boolean(action.payload)
     },
   },
 
@@ -152,6 +190,7 @@ const videos = createSlice({
         state.loading = false
         state.error = errMsg(payload)
       })
+
       // * Get Videos Picker (all channel videos for playlist form)
       .addCase(getVideosPicker.pending, (state, { meta }) => {
         state.loading = true
@@ -169,6 +208,7 @@ const videos = createSlice({
         state.loading = false
         state.error = errMsg(payload)
       })
+
       // * Get Subscription Videos
       .addCase(getSubscriptionVideos.pending, (state) => {
         state.loading = true
@@ -180,6 +220,45 @@ const videos = createSlice({
         state.subscriptionVideos = payload?.subscriptionVideos ?? null
       })
       .addCase(getSubscriptionVideos.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
+      })
+
+      // * Get Watch Video (current video + playlist)
+      .addCase(getWatchVideo.pending, (state, { meta }) => {
+        state.loading = true
+        state.error = null
+        // збережемо контекст listId (щоб UI знав)
+        state.watch.listId = meta?.arg?.list || null
+      })
+      .addCase(getWatchVideo.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.watch.currentVideo = payload?.currentVideo || null
+        state.watch.playlist = payload?.playlist || null
+        state.watch.similar.items = Array.isArray(payload?.similarVideos)
+          ? payload.similarVideos
+          : []
+        state.watch.similar.hasMore = Boolean(payload?.similar?.hasMore)
+        state.watch.similar.nextCursor = payload?.similar?.nextCursor || null
+      })
+      .addCase(getWatchVideo.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
+      })
+
+      // * Get Similar Videos (load more)
+      .addCase(getSimilarVideos.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(getSimilarVideos.fulfilled, (state, { payload }) => {
+        state.loading = false
+        const items = Array.isArray(payload?.items) ? payload.items : []
+        state.watch.similar.items = uniqById([...state.watch.similar.items, ...items])
+        state.watch.similar.hasMore = Boolean(payload?.hasMore)
+        state.watch.similar.nextCursor = payload?.nextCursor || null
+      })
+      .addCase(getSimilarVideos.rejected, (state, { payload }) => {
         state.loading = false
         state.error = errMsg(payload)
       })
@@ -210,5 +289,9 @@ export const {
   setUploadProgress,
   resetUploadProgress,
   resetChannelVideos,
-  resetVideosPicker
+  resetVideosPicker,
+  resetWatch,
+  setWatchSimilarFilter,
+  resetWatchSimilar,
+  setShowPlaylist,
 } = videos.actions

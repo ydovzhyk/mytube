@@ -1,0 +1,99 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.watch-playlist {
+  @include card;
+  padding: $spacing-4;
+  height: 575px;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-3;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-3;
+  }
+
+  &__cover {
+    width: 100%;
+    height: 90px;
+    border-radius: $radius-lg;
+    overflow: hidden;
+    background: $bg-tertiary;
+    border: 1px solid $border-default;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  &__headMain {
+    min-width: 0;
+    @include flex-column;
+    gap: $spacing-2;
+  }
+
+  &__titleRow {
+    @include flex-column;
+    gap: $spacing-2;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: $text-base;
+    font-weight: $font-semibold;
+    @include text-ellipsis;
+    line-height: $leading-tight;
+  }
+
+  &__count {
+    font-size: $text-sm;
+    color: $text-secondary;
+    white-space: nowrap;
+  }
+
+  &__desc {
+    font-size: $text-sm;
+    color: $text-secondary;
+    line-height: $leading-normal;
+  }
+
+  &__descText {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  &__moreBtn {
+    margin-left: $spacing-2;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: $text-primary;
+    font-size: $text-sm;
+    font-weight: $font-medium;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      color: $primary-light;
+    }
+  }
+
+  &__list {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+
+    @include custom-scrollbar;
+
+    @include flex-column;
+    gap: 10px;
+    padding-right: $spacing-2;
+  }
+}
+

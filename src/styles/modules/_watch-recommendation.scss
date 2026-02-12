@@ -1,0 +1,52 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.watch-reco {
+  @include flex-column;
+  gap: $spacing-3;
+}
+
+.watch-reco__top {
+  @include flex-column;
+  gap: $spacing-3;
+}
+
+.watch-reco__title {
+  font-size: $text-lg;
+  font-weight: $font-semibold;
+}
+
+.watch-reco__filters {
+  display: flex;
+  gap: $spacing-2;
+  flex-wrap: wrap;
+}
+
+.watch-reco__filter {
+  @include button-secondary;
+  padding: $spacing-2 $spacing-4;
+  border-radius: $radius-full;
+  font-size: $text-sm;
+  line-height: 1;
+  color: $text-secondary;
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  &--active {
+    background: $primary;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: $text-primary;
+    box-shadow: $glow-primary;
+  }
+}
+
+.watch-reco__list {
+  @include flex-column;
+  gap: $spacing-3;
+}
+
+.watch-reco__more {
+  padding-top: $spacing-2;
+}

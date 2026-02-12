@@ -13,6 +13,9 @@ import { clearChannelsError, clearChannelsMessage } from '@/store/channel/channe
 import { getAuthError, getAuthMessage } from '@/store/auth/auth-selectors'
 import { clearAuthError, clearAuthMessage } from '@/store/auth/auth-slice'
 
+import { getPlaylistsError, getPlaylistsMessage } from '@/store/playlists/playlists-selectors'
+import { clearPlaylistsError, clearPlayListsMessage } from '@/store/playlists/playlists-slice'
+
 import { getTechnicalError, getTechnicalMessage } from '@/store/technical/technical-selectors'
 import { clearTechnicalError, clearTechnicalMessage } from '@/store/technical/technical-slice'
 
@@ -40,10 +43,7 @@ function useToastPair({ error, message, clearError, clearMessage }) {
     if (!raw || !hydrated) return
 
     const now = Date.now()
-    if (
-      lastErrorRef.current.text === raw &&
-      now - lastErrorRef.current.ts < DEDUPE_WINDOW_MS
-    ) {
+    if (lastErrorRef.current.text === raw && now - lastErrorRef.current.ts < DEDUPE_WINDOW_MS) {
       dispatch(clearError())
       return
     }
@@ -68,10 +68,7 @@ function useToastPair({ error, message, clearError, clearMessage }) {
     if (!raw || !hydrated) return
 
     const now = Date.now()
-    if (
-      lastMsgRef.current.text === raw &&
-      now - lastMsgRef.current.ts < DEDUPE_WINDOW_MS
-    ) {
+    if (lastMsgRef.current.text === raw && now - lastMsgRef.current.ts < DEDUPE_WINDOW_MS) {
       dispatch(clearMessage())
       return
     }
@@ -99,6 +96,9 @@ export default function ToastListener() {
   const authError = useSelector(getAuthError)
   const authMessage = useSelector(getAuthMessage)
 
+  const playlistsError = useSelector(getPlaylistsError)
+  const playlistsMessage = useSelector(getPlaylistsMessage)
+
   const technicalError = useSelector(getTechnicalError)
   const technicalMessage = useSelector(getTechnicalMessage)
 
@@ -120,6 +120,13 @@ export default function ToastListener() {
   })
 
   useToastPair({
+    error: playlistsError,
+    message: playlistsMessage,
+    clearError: clearPlaylistsError,
+    clearMessage: clearPlayListsMessage,
+  })
+
+  useToastPair({
     error: technicalError,
     message: technicalMessage,
     clearError: clearTechnicalError,
@@ -135,4 +142,3 @@ export default function ToastListener() {
 
   return null
 }
-

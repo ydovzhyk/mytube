@@ -298,25 +298,19 @@ export default function ChannelForm({ mode = 'create' }) {
 
     const fd = new FormData()
 
-    // create: required, edit: optional
-    if (banner) fd.append('banner', banner)
-
+    if (banner) fd.append('image', banner)
     fd.append('handle', normalizeHandle(values.handle))
     fd.append('name', values.name.trim())
     fd.append('title', values.title.trim())
-
     fd.append('bio', values.bio || '')
     fd.append('description', values.description || '')
-
     fd.append('avatarUrl', values.avatarUrl || '')
     fd.append('contactEmail', values.contactEmail || '')
-
     fd.append('links', JSON.stringify(linksClean))
 
     try {
       if (mode === 'edit') {
         const updated = await dispatch(updateChannel({ id: channel._id, formData: fd })).unwrap()
-        console.log('updated channel:', updated)
         setSubmitOk('Channel updated')
         const nextHandle = normalizeHandle(updated?.handle || channel?.handle || urlHandle)
         router.push(`/channels/@${nextHandle}`)
@@ -327,6 +321,7 @@ export default function ChannelForm({ mode = 'create' }) {
       const created = await dispatch(createChannel(fd)).unwrap()
       setSubmitOk('Channel created')
       const nextHandle = normalizeHandle(created?.handle || values?.handle)
+
       router.push(`/channels/@${nextHandle}`)
       router.refresh()
 
@@ -338,8 +333,7 @@ export default function ChannelForm({ mode = 'create' }) {
       setHandleAvailable(null)
       setHandleHint('')
     } catch (e) {
-      const msg = e?.message || e?.data?.message || ''
-      if (msg) setSubmitError(msg)
+      // no op
     }
   }
 

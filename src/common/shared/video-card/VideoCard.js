@@ -1,8 +1,21 @@
 import Link from 'next/link'
 import Avatar from '../avatar/Avatar'
 
+function formatDuration(sec) {
+  const s = Math.max(0, Math.floor(Number(sec) || 0))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const ss = s % 60
+
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`
+  }
+  return `${m}:${String(ss).padStart(2, '0')}`
+}
 export default function VideoCard({ video }) {
   if (!video) return null
+
+  const durationLabel = video?.duration ? formatDuration(video.duration) : ''
 
   const thumb = video.thumbnailUrl
   const ch = video.channelSnapshot || {}
@@ -18,9 +31,18 @@ export default function VideoCard({ video }) {
 
   return (
     <div className="video-card">
-      <Link className="video-card__thumbLink" href={`/watch/${videoId}`}>
+      <Link
+        className="video-card__thumbLink"
+        href={`/watch/${videoId}`}
+        onClick={() => {
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('mytube:gesture', '1')
+          }
+        }}
+      >
         <div className="video-card__thumbnail">
           <img src={thumb} alt={video.title} />
+          {durationLabel ? <span className="video-card__duration">{durationLabel}</span> : null}
         </div>
       </Link>
 

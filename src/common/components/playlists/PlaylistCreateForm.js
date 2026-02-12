@@ -8,10 +8,6 @@ import clsx from 'clsx'
 
 import { useTranslate } from '@/utils/translating/translating'
 
-import Input from '@/common/shared/input/Input'
-import Button from '@/common/shared/button/Button'
-import T from '@/common/shared/i18n/T'
-
 import { getChannels } from '@/store/channel/channel-selectors'
 import { getVideosPicker } from '@/store/videos/videos-operations'
 import {
@@ -22,12 +18,18 @@ import {
   getVideosPickerChannelId,
 } from '@/store/videos/videos-selectors'
 import { resetVideosPicker } from '@/store/videos/videos-slice'
+import { createPlaylist } from '@/store/playlists/playlists-operations'
+import MiniVideoCard from '@/common/shared/mini-video-card/MiniVideoCard'
+
+import Input from '@/common/shared/input/Input'
+import Button from '@/common/shared/button/Button'
+import T from '@/common/shared/i18n/T'
 
 const normalizeHandle = (raw = '') => String(raw).trim().toLowerCase().replace(/^@+/, '')
 
 function parseActiveHandle(pathname = '') {
   const parts = String(pathname || '').split('/')
-  const maybe = parts[2] // /channels/@handle/...
+  const maybe = parts[2]
   if (!maybe?.startsWith('@')) return null
   return normalizeHandle(maybe.slice(1))
 }
@@ -82,9 +84,7 @@ export default function PlaylistCreateForm() {
   const message = useSelector(getVideosMessage)
 
   const pickerItems = useSelector(getVideosPickerItems)
-  console.log('pickerItems:', pickerItems)
   const pickerChannelId = useSelector(getVideosPickerChannelId)
-
 
   const activeHandleFromPath = useMemo(() => parseActiveHandle(pathname), [pathname])
 
@@ -129,7 +129,6 @@ export default function PlaylistCreateForm() {
 
   const watchedTitle = watch('title')
 
-  // channelRef + handle validation (like upload form)
   useEffect(() => {
     if (!activeHandleFromPath) {
       setValue('channelRef', '', { shouldValidate: true })
@@ -163,6 +162,7 @@ export default function PlaylistCreateForm() {
     const alreadyForThisChannel = String(pickerChannelId || '') === chId
     const hasItems = Array.isArray(pickerItems) && pickerItems.length > 0
     if (alreadyForThisChannel && hasItems) return
+    console.log('Fetching videos for picker, channelId=', chId)
 
     dispatch(getVideosPicker({ channelId: chId }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -175,11 +175,7 @@ export default function PlaylistCreateForm() {
   }, [selected])
 
   const nextOrder = useMemo(() => nextAvailableOrder(selected), [selected])
-
-  // ✅ selected items for submit + for button state
   const selectedItems = useMemo(() => sortSelectedItems(selected), [selected])
-
-  // ✅ button active only when form is really ready
   const hasChannel = Boolean(activeChannel?._id) && !errors.channelRef?.message
   const hasTitle = String(watchedTitle || '').trim().length >= 2
   const hasCover = Boolean(coverFile)
@@ -245,20 +241,20 @@ export default function PlaylistCreateForm() {
     fd.append('title', String(data.title || '').trim())
     fd.append('description', String(data.description || ''))
     fd.append('visibility', String(data.visibility || 'public'))
-    fd.append('cover', coverFile)
+    fd.append('image', coverFile)
     fd.append('items', JSON.stringify(v.items))
 
-    // TODO: dispatch(createPlaylist(fd)).unwrap()
-    console.log('CREATE PLAYLIST payload:', {
-      channelRef: String(activeChannel._id),
-      title: data.title,
-      visibility: data.visibility,
-      items: v.items,
-    })
+    try {
+      await dispatch(createPlaylist(fd)).unwrap()
 
-    reset()
-    setCoverFile(null)
-    router.push(`/channels/@${normalizeHandle(activeChannel.handle)}/playlists`)
+      router.push(`/channels/@${normalizeHandle(activeChannel.handle)}/playlists`)
+      router.refresh()
+
+      reset()
+      setCoverFile(null)
+    } catch (e) {
+      // no op
+    }
   }
 
   return (
@@ -386,7 +382,6 @@ export default function PlaylistCreateForm() {
                 const sel = selected?.[id]
                 const included = Boolean(sel?.included)
                 const orderVal = sel?.order ?? ''
-                const isPublished = Boolean(v?.isPublished)
 
                 return (
                   <div key={id} className={clsx('picker-row', { 'picker-row--active': included })}>
@@ -411,32 +406,17 @@ export default function PlaylistCreateForm() {
                       />
                     </div>
 
-                    <div className="picker-row__thumb">
-                      {v?.thumbnailUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={v.thumbnailUrl} alt="thumb" />
-                      ) : (
-                        <div className="picker-row__thumb--empty" />
-                      )}
-                    </div>
-
-                    <div className="picker-row__info">
-                      <div className="picker-row__title">{v?.title || 'Untitled'}</div>
-
-                      <div className="picker-row__meta">
-                        <span
-                          className={clsx('picker-badge', {
-                            'picker-badge--ok': isPublished,
-                            'picker-badge--muted': !isPublished,
-                          })}
-                        >
-                          <T>{isPublished ? 'Published' : 'Draft'}</T>
-                        </span>
-
-                        <span className="picker-row__muted">
-                          • {Number(v?.stats?.views || 0)} <T>views</T>
-                        </span>
-                      </div>
+                    <div className="picker-row__card">
+                      <MiniVideoCard
+                        video={v}
+                        size="sm"
+                        showChannel
+                        active={included}
+                        showPublishBadge
+                        setGestureOnClick={false}
+                        mode="action"
+                        onClick={() => onToggleInclude(id)}
+                      />
                     </div>
                   </div>
                 )

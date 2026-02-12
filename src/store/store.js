@@ -14,6 +14,7 @@ import authReducer from './auth/auth-slice'
 import channelsReducer from './channel/channel-slice'
 import technicalReducer from './technical/technical-slice'
 import videosReducer from './videos/videos-slice'
+import playlistsReducer from './playlists/playlists-slice'
 import { setupInterceptors } from '../lib/api/auth'
 // import logger from 'redux-logger'
 
@@ -50,6 +51,7 @@ export const store = configureStore({
     technical: finalTechnicalReducer,
     channels: channelsReducer,
     videos: videosReducer,
+    playlists: playlistsReducer,
   },
   middleware: (getDefaultMiddleware) => {
     const middlewares = getDefaultMiddleware({

@@ -162,6 +162,19 @@
     &:hover {
       background: rgba(255, 255, 255, 0.1);
     }
+
+    svg {
+      color: inherit;
+    }
+
+    &--active {
+      background: rgba(255, 255, 255, 0.14);
+      color: $primary;
+
+      svg {
+        color: $primary;
+      }
+    }
   }
 
   // Volume

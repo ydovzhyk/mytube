@@ -1,8 +1,24 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import clsx from 'clsx'
-import { HiPlay, HiPause, HiVolumeUp, HiVolumeOff, HiCog, HiArrowsExpand } from 'react-icons/hi'
+import pushWatchHistoryId from '@/utils/push-watch-history'
+import {
+  getVolumeLevel,
+  getMuted,
+  getPreferredQuality,
+  getFullscreenWanted,
+  getTheaterMode,
+} from '@/store/technical/technical-selectors'
+import {
+  setVolumeLevel,
+  setMuted,
+  setPreferredQuality,
+  setFullscreenWanted,
+  setTheaterMode,
+} from '@/store/technical/technical-slice'
+import { HiVolumeUp, HiVolumeOff, HiCog, HiArrowsExpand, HiRefresh } from 'react-icons/hi'
 
 function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n))
@@ -17,32 +33,99 @@ function formatTime(sec = 0) {
   return `${m}:${String(r).padStart(2, '0')}`
 }
 
+/**
+ * MVP view rule:
+ * - if duration <= 60s: count when watched >= 15s OR watched >= 80%
+ * - else: count when watched >= 30s OR watched >= 60%
+ */
 function canCountView({ duration, watchedSeconds }) {
   const d = Number(duration) || 0
   const w = Number(watchedSeconds) || 0
   if (!d || !w) return false
 
-  if (d <= 60) {
-    return w >= 15 || w / d >= 0.8
-  }
-
+  if (d <= 60) return w >= 15 || w / d >= 0.8
   return w >= 30 || w / d >= 0.6
 }
 
-function safeSessionKey(videoId) {
-  return videoId ? `mytube:viewed:${videoId}` : null
+/**
+ * Rewatch strategy:
+ * - allow repeats, but with cooldown in the same tab (sessionStorage)
+ * - also require a "new session" start: user must rewind near the beginning OR replay after ended
+ */
+const VIEW_COOLDOWN_SEC = 10 * 60
+const REWATCH_RESET_NEAR_START_SEC = 5
+
+function viewedAtKey(videoId) {
+  return videoId ? `mytube:viewedAt:${videoId}` : null
+}
+
+function canSendByCooldown(videoId) {
+  const key = viewedAtKey(videoId)
+  if (!key || typeof window === 'undefined') return true
+  const last = Number(window.sessionStorage.getItem(key) || 0)
+  if (!last) return true
+  return (Date.now() - last) / 1000 >= VIEW_COOLDOWN_SEC
+}
+
+function markViewedNow(videoId) {
+  const key = viewedAtKey(videoId)
+  if (!key || typeof window === 'undefined') return
+  window.sessionStorage.setItem(key, String(Date.now()))
 }
 
 /**
- * sources shape (recommended):
- *  { "360": "url", "480": "url", "720": "url" }
- *
- * availableQualities: [360, 480, 720]
- *
- * NEW:
- *  videoId: string (required for view count)
- *  onView: async function(videoId) => Promise<void>
+ * Quality helpers
+ * - Accept: 720, "720", "720p", " 720P "
+ * - Normalize to: number (e.g. 720)
  */
+function normalizeQuality(q) {
+  if (q === null || q === undefined) return null
+  const n = Number(String(q).trim().toLowerCase().replace('p', ''))
+  return Number.isFinite(n) ? n : null
+}
+
+/**
+ * Normalize sources map:
+ * - Input can be: { "720p": url, 720: url, "720": url }
+ * - Output is always: { "720": url }
+ */
+function normalizeSourcesMap(sources) {
+  const out = {}
+  if (!sources || typeof sources !== 'object') return out
+
+  for (const [k, v] of Object.entries(sources)) {
+    if (!v) continue
+    const q = normalizeQuality(k)
+    if (!q) continue
+    const key = String(q)
+    if (!out[key]) out[key] = v
+  }
+
+  return out
+}
+
+/**
+ * Normalize qualities list:
+ * - Input can be: [360, "360p", "720P"]
+ * - Output: [360, 480, 720] filtered by existing sources
+ */
+function normalizeQualitiesList(availableQualities, sourcesNorm) {
+  const raw = Array.isArray(availableQualities) ? availableQualities : []
+  const list = raw
+    .map(normalizeQuality)
+    .filter((q) => q && sourcesNorm?.[String(q)])
+    .sort((a, b) => a - b)
+
+  if (list.length) return list
+
+  const inferred = Object.keys(sourcesNorm || {})
+    .map((k) => normalizeQuality(k))
+    .filter((q) => q)
+    .sort((a, b) => a - b)
+
+  return inferred
+}
+
 export default function VideoPlayer({
   videoId,
   sources = {},
@@ -51,9 +134,16 @@ export default function VideoPlayer({
   initialQuality,
   autoPlay = false,
   onEnded,
-  onView, // <= call your videoView here
+  onView,
   className,
+  hasNext = false,
+  hasPrev = false,
+  onNext,
+  onPrev,
+  onWatched,
 }) {
+  const dispatch = useDispatch()
+
   const videoRef = useRef(null)
   const rootRef = useRef(null)
 
@@ -65,87 +155,97 @@ export default function VideoPlayer({
   const [currentTime, setCurrentTime] = useState(0)
   const [bufferedEnd, setBufferedEnd] = useState(0)
 
-  const [volume, setVolume] = useState(0.2)
-  const [muted, setMuted] = useState(false)
+  const volume = useSelector(getVolumeLevel)
+  const muted = useSelector(getMuted)
+  const preferredQuality = useSelector(getPreferredQuality)
+  const fullscreenWanted = useSelector(getFullscreenWanted)
+  const theaterMode = useSelector(getTheaterMode)
 
   const [controlsVisible, setControlsVisible] = useState(false)
   const [qualityOpen, setQualityOpen] = useState(false)
-  const [theaterMode, setTheaterMode] = useState(false)
 
   const [playAnim, setPlayAnim] = useState(false)
 
-  // --- VIEW TRACKING (anti-seek) ---
-  const sentViewRef = useRef(false)
+  // LOOP
+  const [loopEnabled, setLoopEnabled] = useState(false)
+
+  // --- VIEW TRACKING (anti-seek + repeats w/ cooldown) ---
+  const sentThisSessionRef = useRef(false)
   const watchedSecondsRef = useRef(0)
   const lastTimeRef = useRef(0)
   const lastTickAtRef = useRef(0)
 
-  const trySendView = useCallback(async () => {
-    if (!videoId) return
-    if (sentViewRef.current) return
+  const toggleTheater = useCallback(() => {
+    dispatch(setTheaterMode(!theaterMode))
+  }, [dispatch, theaterMode])
 
-    const key = safeSessionKey(videoId)
-    if (key && typeof window !== 'undefined') {
-      const already = window.sessionStorage.getItem(key)
-      if (already === '1') {
-        sentViewRef.current = true
-        return
-      }
-    }
-
-    if (!canCountView({ duration, watchedSeconds: watchedSecondsRef.current })) return
-
-    sentViewRef.current = true
-    if (key && typeof window !== 'undefined') {
-      window.sessionStorage.setItem(key, '1')
-    }
-
-    // fire and forget (don’t block UI)
-    try {
-      await onView?.(videoId)
-    } catch {
-      // if request failed, we still keep it "sent" for MVP
-      // (server can dedupe; client shouldn’t spam)
-    }
-  }, [videoId, onView, duration])
-
-  // reset view tracking when video changes (by id) OR when we swap sources (quality)
+  // ✅ fullscreen listener: keep store in sync (Esc / browser UI etc.)
   useEffect(() => {
-    sentViewRef.current = false
+    const onFs = () => {
+      const isFs = Boolean(document.fullscreenElement)
+      // avoid redundant dispatch spam
+      if (isFs !== fullscreenWanted) dispatch(setFullscreenWanted(isFs))
+    }
+    document.addEventListener('fullscreenchange', onFs)
+    return () => document.removeEventListener('fullscreenchange', onFs)
+  }, [dispatch, fullscreenWanted])
+
+  const resetWatchSession = useCallback(() => {
+    sentThisSessionRef.current = false
     watchedSecondsRef.current = 0
     lastTimeRef.current = 0
     lastTickAtRef.current = 0
+  }, [])
 
-    const key = safeSessionKey(videoId)
-    if (key && typeof window !== 'undefined') {
-      if (window.sessionStorage.getItem(key) === '1') {
-        sentViewRef.current = true
-      }
+  const trySendView = useCallback(async () => {
+    if (!videoId) return
+    if (sentThisSessionRef.current) return
+    if (!canSendByCooldown(videoId)) return
+    if (!canCountView({ duration, watchedSeconds: watchedSecondsRef.current })) return
+
+    sentThisSessionRef.current = true
+    markViewedNow(videoId)
+    pushWatchHistoryId(videoId)
+    onWatched?.(videoId)
+
+    try {
+      await onView?.(videoId)
+    } catch {
+      // MVP: don’t retry/spam
     }
-  }, [videoId])
+  }, [videoId, duration, onView, onWatched])
 
-  // pick default quality
+  useEffect(() => {
+    resetWatchSession()
+  }, [videoId, resetWatchSession])
+
+  // Normalize inputs once (supports "720p" backend format)
+  const sourcesNorm = useMemo(() => normalizeSourcesMap(sources), [sources])
+  const qualitiesNorm = useMemo(
+    () => normalizeQualitiesList(availableQualities, sourcesNorm),
+    [availableQualities, sourcesNorm]
+  )
+
+  // pick default quality (store -> prop -> best available)
   const defaultQuality = useMemo(() => {
-    const qList = (availableQualities || [])
-      .map((q) => Number(q))
-      .filter((q) => Number.isFinite(q) && sources?.[String(q)])
-      .sort((a, b) => a - b)
+    const fromStore = normalizeQuality(preferredQuality)
+    if (fromStore && sourcesNorm?.[String(fromStore)]) return fromStore
 
-    if (initialQuality && sources?.[String(initialQuality)]) return Number(initialQuality)
-    return qList.length ? qList[qList.length - 1] : 360
-  }, [availableQualities, sources, initialQuality])
+    const fromProp = normalizeQuality(initialQuality)
+    if (fromProp && sourcesNorm?.[String(fromProp)]) return fromProp
+
+    return qualitiesNorm.length ? qualitiesNorm[qualitiesNorm.length - 1] : 360
+  }, [preferredQuality, initialQuality, sourcesNorm, qualitiesNorm])
 
   const [quality, setQuality] = useState(defaultQuality)
 
-  const activeSrc = useMemo(() => {
-    return sources?.[String(quality)] || ''
-  }, [sources, quality])
-
-  // keep quality valid if sources change
+  // If new video / sources changed, ensure quality is valid
   useEffect(() => {
-    if (!sources?.[String(quality)]) setQuality(defaultQuality)
+    if (!sourcesNorm?.[String(quality)]) setQuality(defaultQuality)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sources, defaultQuality])
+  }, [sourcesNorm, defaultQuality])
+
+  const activeSrc = useMemo(() => sourcesNorm?.[String(quality)] || '', [sourcesNorm, quality])
 
   // set src on change (preserve time)
   useEffect(() => {
@@ -159,7 +259,7 @@ export default function VideoPlayer({
     setIsBuffering(true)
     setIsReady(false)
 
-    // reset anti-seek baselines on source change (quality swap)
+    // reset anti-seek baselines (do not reset watched seconds)
     lastTimeRef.current = 0
     lastTickAtRef.current = 0
 
@@ -172,17 +272,13 @@ export default function VideoPlayer({
       } catch {}
       setIsReady(true)
       setIsBuffering(false)
-      if (wasPlaying || autoPlay) {
-        v.play().catch(() => {})
-      }
+      if (wasPlaying || autoPlay) v.play().catch(() => {})
     }
 
     v.addEventListener('loadedmetadata', onLoaded, { once: true })
     v.load()
 
-    return () => {
-      v.removeEventListener('loadedmetadata', onLoaded)
-    }
+    return () => v.removeEventListener('loadedmetadata', onLoaded)
   }, [activeSrc, poster, autoPlay])
 
   // volume/mute sync
@@ -193,16 +289,12 @@ export default function VideoPlayer({
     v.muted = Boolean(muted)
   }, [volume, muted])
 
-  const showControls = useCallback(() => {
-    setControlsVisible(true)
-  }, [])
-
+  const showControls = useCallback(() => setControlsVisible(true), [])
   const hideControls = useCallback(() => {
     setControlsVisible(false)
     setQualityOpen(false)
   }, [])
 
-  // auto-hide controls after some idle
   useEffect(() => {
     if (!controlsVisible) return
     const id = setTimeout(() => {
@@ -211,7 +303,6 @@ export default function VideoPlayer({
     return () => clearTimeout(id)
   }, [controlsVisible, qualityOpen, currentTime])
 
-  // close quality menu on outside click
   useEffect(() => {
     if (!qualityOpen) return
     const onDoc = (e) => {
@@ -243,7 +334,6 @@ export default function VideoPlayer({
     const t = v.currentTime || 0
     setCurrentTime(t)
 
-    // buffered
     try {
       if (v.buffered && v.buffered.length) {
         const end = v.buffered.end(v.buffered.length - 1)
@@ -251,9 +341,14 @@ export default function VideoPlayer({
       }
     } catch {}
 
-    // --- anti-seek watched time ---
-    // Count only "reasonable" forward progress.
-    // If user seeked forward a lot, don’t add it to watchedSeconds.
+    // new watch session if returned near start
+    if (t <= REWATCH_RESET_NEAR_START_SEC && !v.paused && watchedSecondsRef.current > 0) {
+      resetWatchSession()
+      lastTimeRef.current = t
+      lastTickAtRef.current = Date.now()
+      return
+    }
+
     const now = Date.now()
     const lastT = lastTimeRef.current || 0
     const lastTickAt = lastTickAtRef.current || 0
@@ -261,26 +356,20 @@ export default function VideoPlayer({
     const delta = t - lastT
     const wallDelta = lastTickAt ? (now - lastTickAt) / 1000 : 0
 
-    // Accept small forward deltas. 1.2s is a safe cap for timeupdate jitter.
-    // Also require that real time passed (prevents weird jumps).
     if (delta > 0 && delta <= 1.2 && (wallDelta === 0 || wallDelta <= 2.0) && !v.paused) {
       watchedSecondsRef.current += delta
-      // attempt count view
-      // (no await to keep it smooth)
       trySendView()
     }
 
     lastTimeRef.current = t
     lastTickAtRef.current = now
-  }, [trySendView])
+  }, [trySendView, resetWatchSession])
 
   const onLoadedMeta = useCallback(() => {
     const v = videoRef.current
     if (!v) return
     setDuration(v.duration || 0)
     setIsReady(true)
-
-    // after duration known, maybe we already watched enough (rare)
     trySendView()
   }, [trySendView])
 
@@ -289,16 +378,27 @@ export default function VideoPlayer({
   const onWaiting = useCallback(() => setIsBuffering(true), [])
   const onPlayingEv = useCallback(() => setIsBuffering(false), [])
 
+  // ENDED: loop -> restart & play, otherwise call onEnded (playlist next etc.)
   const onEndedEv = useCallback(() => {
     setIsPlaying(false)
-    // if user ended the video, it definitely counts as view (fallback)
-    // but only if not sent yet
-    if (!sentViewRef.current) {
+
+    // count view if needed (subject to cooldown)
+    if (!sentThisSessionRef.current) {
       watchedSecondsRef.current = Math.max(watchedSecondsRef.current, duration || 0)
       trySendView()
     }
+
+    resetWatchSession()
+
+    const v = videoRef.current
+    if (loopEnabled && v) {
+      v.currentTime = 0
+      v.play().catch(() => {})
+      return
+    }
+
     onEnded?.()
-  }, [onEnded, trySendView, duration])
+  }, [onEnded, trySendView, duration, resetWatchSession, loopEnabled])
 
   const seekTo = useCallback(
     (clientX) => {
@@ -309,20 +409,13 @@ export default function VideoPlayer({
       const p = clamp((clientX - rect.left) / rect.width, 0, 1)
       v.currentTime = p * duration
 
-      // seek resets "anti-seek" baseline
       lastTimeRef.current = v.currentTime || 0
       lastTickAtRef.current = Date.now()
     },
     [duration]
   )
 
-  const onProgressClick = useCallback(
-    (e) => {
-      seekTo(e.clientX)
-    },
-    [seekTo]
-  )
-
+  const onProgressClick = useCallback((e) => seekTo(e.clientX), [seekTo])
   const onProgressMove = useCallback(
     (e) => {
       if (e.buttons !== 1) return
@@ -332,27 +425,29 @@ export default function VideoPlayer({
   )
 
   const toggleMute = useCallback(() => {
-    setMuted((m) => !m)
-  }, [])
+    dispatch(setMuted(!muted))
+  }, [dispatch, muted])
 
   const onVolumeChange = useCallback(
     (e) => {
       const v = Number(e.target.value)
-      setVolume(v)
-      if (v > 0 && muted) setMuted(false)
+      if (v > 0 && muted) dispatch(setMuted(false))
+      dispatch(setVolumeLevel(v))
     },
-    [muted]
+    [dispatch, muted]
   )
 
+  // ✅ fullscreen toggle (store will sync via fullscreenchange listener)
   const toggleFullscreen = useCallback(async () => {
     const el = rootRef.current
     if (!el) return
-
-    if (document.fullscreenElement) {
-      await document.exitFullscreen().catch(() => {})
-      return
-    }
-    await el.requestFullscreen?.().catch(() => {})
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen()
+        return
+      }
+      await el.requestFullscreen?.()
+    } catch {}
   }, [])
 
   const bufferedPct = useMemo(() => {
@@ -380,8 +475,10 @@ export default function VideoPlayer({
       onMouseMove={showControls}
       onMouseLeave={hideControls}
       onClick={(e) => {
-        const btn = e.target.closest?.('button')
-        if (btn) return
+        const interactive = e.target.closest?.(
+          'button, input, a, textarea, select, label, [role="slider"], .video-player__progress, .video-player__quality-menu'
+        )
+        if (interactive) return
         togglePlay()
       }}
     >
@@ -413,7 +510,13 @@ export default function VideoPlayer({
           })}
           aria-hidden
         >
-          {isPlaying ? <HiPause /> : <HiPlay />}
+          <img
+            src={isPlaying ? '/images/pause-white.svg' : '/images/play-white.svg'}
+            alt={isPlaying ? 'Pause' : 'Play'}
+            width={14}
+            height={14}
+            draggable={false}
+          />
         </div>
 
         <div className="video-player__controls">
@@ -423,6 +526,10 @@ export default function VideoPlayer({
             onMouseMove={onProgressMove}
             role="slider"
             aria-label="Seek"
+            aria-valuemin={0}
+            aria-valuemax={Math.floor(duration || 0)}
+            aria-valuenow={Math.floor(currentTime || 0)}
+            aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
           >
             <div className="video-player__progress-buffer" style={{ width: `${bufferedPct}%` }} />
             <div className="video-player__progress-filled" style={{ width: `${playedPct}%` }}>
@@ -438,7 +545,39 @@ export default function VideoPlayer({
                 onClick={togglePlay}
                 aria-label="Play/Pause"
               >
-                {isPlaying ? <HiPause /> : <HiPlay />}
+                <img
+                  src={isPlaying ? '/images/pause-white.svg' : '/images/play-white.svg'}
+                  alt={isPlaying ? 'Pause' : 'Play'}
+                  width={14}
+                  height={14}
+                  draggable={false}
+                />
+              </button>
+
+              <button
+                className="video-player__btn"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onPrev?.()
+                }}
+                aria-label="Previous"
+                disabled={!hasPrev}
+              >
+                <img src="/images/prev-white.svg" alt="" width={14} height={14} draggable={false} />
+              </button>
+
+              <button
+                className="video-player__btn"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onNext?.()
+                }}
+                aria-label="Next"
+                disabled={!hasNext}
+              >
+                <img src="/images/next-white.svg" alt="" width={14} height={14} draggable={false} />
               </button>
 
               <div className="video-player__volume">
@@ -470,6 +609,20 @@ export default function VideoPlayer({
             </div>
 
             <div className="video-player__right-controls">
+              {/* LOOP */}
+              <button
+                className={clsx('video-player__btn', loopEnabled && 'video-player__btn--active')}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setLoopEnabled((v) => !v)
+                }}
+                aria-label={loopEnabled ? 'Loop: On' : 'Loop: Off'}
+                title={loopEnabled ? 'Loop: On' : 'Loop: Off'}
+              >
+                <HiRefresh />
+              </button>
+
               <div className="video-player__quality">
                 <button
                   className="video-player__btn"
@@ -489,9 +642,8 @@ export default function VideoPlayer({
                   })}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {availableQualities
-                    .map((q) => Number(q))
-                    .filter((q) => sources?.[String(q)])
+                  {qualitiesNorm
+                    .slice()
                     .sort((a, b) => b - a)
                     .map((q) => (
                       <button
@@ -502,6 +654,7 @@ export default function VideoPlayer({
                         })}
                         onClick={() => {
                           setQuality(q)
+                          dispatch(setPreferredQuality(q))
                           setQualityOpen(false)
                         }}
                       >
@@ -512,14 +665,25 @@ export default function VideoPlayer({
                 </div>
               </div>
 
+              {/* ✅ FULLSCREEN (not theater) */}
               <button
-                className="video-player__btn"
+                className={clsx(
+                  'video-player__btn',
+                  fullscreenWanted && 'video-player__btn--active'
+                )}
                 type="button"
-                onClick={toggleFullscreen}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleFullscreen()
+                }}
                 aria-label="Fullscreen"
+                title={fullscreenWanted ? 'Fullscreen: On' : 'Fullscreen: Off'}
               >
                 <HiArrowsExpand />
               </button>
+
+              {/* якщо хочеш theater — зроби окрему кнопку/іконку */}
+              {/* <button ... onClick={toggleTheater} /> */}
             </div>
           </div>
         </div>

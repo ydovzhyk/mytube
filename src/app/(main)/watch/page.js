@@ -33,7 +33,7 @@ export default function WatchPage() {
           autoPlay={false}
           onView={(id) => dispatch(videoView(id))}
         />
-        
+
         <div className="video-info">
           <h1 className="video-info__title">Video Title</h1>
 
