@@ -103,6 +103,9 @@ const videos = createSlice({
       state.watch.similar.hasMore = false
       state.watch.similar.nextCursor = null
     },
+    setWatchCurrentVideo: (state, action) => {
+      state.watch.currentVideo = action.payload || null
+    },
     setWatchSimilarFilter: (state, action) => {
       state.watch.similar.filter = action.payload || 'all'
       state.watch.similar.items = []
@@ -294,4 +297,5 @@ export const {
   setWatchSimilarFilter,
   resetWatchSimilar,
   setShowPlaylist,
+  setWatchCurrentVideo,
 } = videos.actions

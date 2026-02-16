@@ -5,10 +5,10 @@ const initialState = {
   message: null,
   loading: false,
 
+  backPrevAllowed: false,
   volumeLevel: 0.2,
   muted: false,
   preferredQuality: null,
-  theaterMode: false,
   fullscreenWanted: false,
 }
 
@@ -25,6 +25,9 @@ const technical = createSlice({
     setTechnicalError: (state, action) => {
       state.error = action.payload
     },
+    setBackPrevAllowed: (state, action) => {
+      state.backPrevAllowed = Boolean(action.payload)
+    },
     setVolumeLevel: (state, action) => {
       const n = Number(action.payload)
       state.volumeLevel = Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0.2
@@ -35,9 +38,6 @@ const technical = createSlice({
     setPreferredQuality: (state, action) => {
       const n = Number(action.payload)
       state.preferredQuality = Number.isFinite(n) ? n : null
-    },
-    setTheaterMode: (state, action) => {
-      state.theaterMode = Boolean(action.payload)
     },
     setFullscreenWanted: (state, action) => {
       state.fullscreenWanted = Boolean(action.payload)
@@ -59,6 +59,6 @@ export const {
   setVolumeLevel,
   setMuted,
   setPreferredQuality,
-  setTheaterMode,
-  setFullscreenWanted } =
-  technical.actions
+  setFullscreenWanted,
+  setBackPrevAllowed,
+} = technical.actions

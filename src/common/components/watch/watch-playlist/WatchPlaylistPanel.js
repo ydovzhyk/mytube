@@ -1,24 +1,22 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import MiniVideoCard from '@/common/shared/mini-video-card/MiniVideoCard'
-import T from '@/common/shared/i18n/T'
 import { useTranslate } from '@/utils/translating/translating'
 
 const DESC_LIMIT = 85
 
-export default function WatchPlaylistPanel({
-  playlist,
-  currentId,
-  onSelectVideo,
-}) {
+export default function WatchPlaylistPanel({ playlist, currentId, onSelectVideo }) {
   const [collapsed, setCollapsed] = useState(false)
   const [showMore, setShowMore] = useState(false)
 
   const more = useTranslate('more')
   const less = useTranslate('less')
   const description = useTranslate(String(playlist?.description || ''))
+
+  const listRef = useRef(null)
+  const itemRefs = useRef(new Map())
 
   const items = useMemo(() => {
     const arr = playlist?.items
@@ -29,6 +27,29 @@ export default function WatchPlaylistPanel({
     if (!currentId || !items.length) return -1
     return items.findIndex((v) => String(v?._id) === String(currentId))
   }, [items, currentId])
+
+  useEffect(() => {
+    if (!currentId) return
+    if (!items.length) return
+    if (collapsed) return
+
+    const el = itemRefs.current.get(String(currentId))
+    const container = listRef.current
+
+    if (!el || !container) return
+
+    const cRect = container.getBoundingClientRect()
+    const eRect = el.getBoundingClientRect()
+
+    const isAbove = eRect.top < cRect.top
+    const isBelow = eRect.bottom > cRect.bottom
+
+    if (isAbove || isBelow) {
+      requestAnimationFrame(() => {
+        el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+      })
+    }
+  }, [currentId, items.length, collapsed])
 
   const hasDesc = Boolean(description)
   const descShort = useMemo(() => {
@@ -47,7 +68,6 @@ export default function WatchPlaylistPanel({
 
   return (
     <section className="watch-playlist" aria-label="Playlist">
-      {/* HEADER */}
       <div className="watch-playlist__header">
         {coverUrl ? (
           <div className="watch-playlist__cover" aria-hidden="true">
@@ -60,9 +80,10 @@ export default function WatchPlaylistPanel({
             <div className="watch-playlist__title" title={title}>
               {title}
             </div>
+
+            {/* <button type="button" onClick={() => setCollapsed(v => !v)}>...</button> */}
           </div>
 
-          {/* DESCRIPTION */}
           {hasDesc ? (
             <div className="watch-playlist__desc">
               <span className="watch-playlist__descText">{showMore ? description : descShort}</span>
@@ -77,22 +98,39 @@ export default function WatchPlaylistPanel({
               ) : null}
             </div>
           ) : null}
+
           <div className="watch-playlist__count">{indexLabel}</div>
         </div>
       </div>
 
-      {/* LIST */}
-      <div className={clsx('watch-playlist__list', collapsed && 'watch-playlist__list--collapsed')}>
-        {items.map((v) => (
-          <MiniVideoCard
-            key={v._id}
-            video={v}
-            active={String(v?._id) === String(currentId)}
-            onClick={() => onSelectVideo?.(v._id)}
-            showChannel={true}
-            size="sm"
-          />
-        ))}
+      <div
+        ref={listRef}
+        className={clsx('watch-playlist__list', collapsed && 'watch-playlist__list--collapsed')}
+      >
+        {items.map((v) => {
+          const id = String(v?._id || '')
+          const isActive = id && String(currentId) === id
+
+          return (
+            <div
+              key={id}
+              ref={(node) => {
+                if (!id) return
+                if (node) itemRefs.current.set(id, node)
+                else itemRefs.current.delete(id)
+              }}
+              data-active={isActive ? '1' : '0'}
+            >
+              <MiniVideoCard
+                video={v}
+                active={isActive}
+                onClick={() => onSelectVideo?.(v._id)}
+                showChannel={true}
+                size="sm"
+              />
+            </div>
+          )
+        })}
       </div>
     </section>
   )

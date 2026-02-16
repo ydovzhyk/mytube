@@ -26,7 +26,7 @@ const createPersistedAuthReducer = () => {
   const cfg = {
     key: 'auth-local',
     storage,
-    whitelist: [],
+    whitelist: [], // залишаємо як у тебе
   }
   return persistReducer(cfg, authReducer)
 }
@@ -34,11 +34,18 @@ const createPersistedAuthReducer = () => {
 const createPersistedTechnicalReducer = () => {
   if (isServer) return technicalReducer
   const storage = require('redux-persist/lib/storage').default
+
   const cfg = {
     key: 'tech-local',
     storage,
-    whitelist: [],
+    whitelist: [
+      'volumeLevel',
+      'muted',
+      'preferredQuality',
+      'backPrevAllowed',
+    ],
   }
+
   return persistReducer(cfg, technicalReducer)
 }
 

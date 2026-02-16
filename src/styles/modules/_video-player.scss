@@ -8,15 +8,6 @@
   border-radius: $radius-lg;
   overflow: hidden;
 
-  &--theater {
-    border-radius: 0;
-    position: fixed;
-    top: $header-height;
-    left: 0;
-    right: 0;
-    z-index: $z-fixed - 1;
-  }
-
   &--fullscreen {
     border-radius: 0;
   }
@@ -91,20 +82,29 @@
     visibility: visible;
   }
 
-  // Progress bar
+  // BIG HIT AREA for seeking (spacing only here)
+  &__progress-hit {
+    padding-top: 11px;
+    width: 100%;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  // The visual bar (NO margin-bottom here)
   &__progress {
     width: 100%;
     height: 4px;
     background: rgba(255, 255, 255, 0.3);
     border-radius: $radius-full;
-    cursor: pointer;
-    margin-bottom: $spacing-3;
     position: relative;
     transition: height $transition-fast;
+  }
 
-    &:hover {
-      height: 6px;
-    }
+  &__progress-hit:hover &__progress {
+    height: 6px;
   }
 
   &__progress-filled {
@@ -127,7 +127,7 @@
     transition: transform $transition-fast;
   }
 
-  &__progress:hover &__progress-thumb {
+  &__progress-hit:hover &__progress-thumb {
     transform: translateY(-50%) scale(1);
   }
 
@@ -200,7 +200,6 @@
     height: 4px;
     border-radius: $radius-full;
     cursor: pointer;
-    // Background gradient is set inline via JS
 
     &::-webkit-slider-thumb {
       -webkit-appearance: none;
@@ -289,5 +288,6 @@
     opacity: 0;
   }
 }
+
 
 

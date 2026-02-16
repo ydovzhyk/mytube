@@ -4,5 +4,5 @@ export const getTechnicalLoading = ({ technical }) => technical.loading;
 export const getVolumeLevel = ({ technical }) => technical.volumeLevel;
 export const getMuted = ({ technical }) => technical.muted;
 export const getPreferredQuality = ({ technical }) => technical.preferredQuality;
-export const getTheaterMode = ({ technical }) => technical.theaterMode;
 export const getFullscreenWanted = ({ technical }) => technical.fullscreenWanted;
+export const getBackPrevAllowed = ({ technical }) => technical.backPrevAllowed;

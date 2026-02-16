@@ -30,8 +30,6 @@ export default function MiniVideoCard({
 
   mode = 'navigate', // 'navigate' | 'action'
 }) {
-  if (!video?._id) return null
-
   const durationLabel = video?.duration ? formatDuration(video.duration) : ''
 
   const id = String(video._id)

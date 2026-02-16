@@ -1,0 +1,174 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.watch-video {
+  @include flex-column;
+  gap: $spacing-3;
+
+  &__title {
+    font-size: $text-xl;
+    font-weight: $font-semibold;
+    line-height: $leading-tight;
+  }
+
+  &__metaRow {
+    @include flex-between;
+    flex-wrap: wrap;
+    gap: $spacing-3;
+  }
+
+  &__stats {
+    @include flex-start;
+    gap: $spacing-2;
+    color: $text-secondary;
+    font-size: $text-sm;
+  }
+
+  &__dot {
+    opacity: 0.8;
+  }
+
+  &__actions {
+    @include flex-start;
+    gap: $spacing-2;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  &__segmented {
+    display: flex;
+    align-items: center;
+    border: 1px solid $border-default;
+    background: $bg-tertiary;
+    border-radius: $radius-full;
+    overflow: hidden;
+  }
+
+  &__segBtn {
+    @include button-ghost;
+    @include flex-center;
+    gap: $spacing-2;
+    padding: $spacing-2 $spacing-4;
+    font-size: $text-sm;
+    color: $text-primary;
+
+    svg {
+      font-size: $text-lg;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__segDivider {
+    width: 1px;
+    height: 22px;
+    background: $border-default;
+    opacity: 0.9;
+  }
+
+  &__pillBtn {
+    @include button-secondary;
+    @include flex-center;
+    gap: $spacing-2;
+    padding: $spacing-2 $spacing-4;
+    border-radius: $radius-full;
+    font-size: $text-sm;
+
+    svg {
+      font-size: $text-lg;
+    }
+
+    &--active {
+      background: $primary;
+      color: $text-primary;
+    }
+  }
+
+  &__iconBtn {
+    @include button-ghost;
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-full;
+    font-size: 20px;
+    color: $text-secondary;
+
+    &:hover:not(:disabled) {
+      color: $text-primary;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  /* Channel row */
+  &__channelRow {
+    @include flex-between;
+    gap: $spacing-3;
+    padding: $spacing-3 $spacing-4;
+    background: $bg-tertiary;
+    border-radius: $radius-lg;
+  }
+
+  &__channelLeft {
+    min-width: 0;
+  }
+
+  &__channelBox {
+    @include flex-start;
+    gap: $spacing-3;
+    min-width: 0;
+  }
+
+  &__channelAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-full;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  &__channelMeta {
+    @include flex-column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  /* Назва: просто текст */
+  &__channelName {
+    font-weight: $font-semibold;
+    font-size: $text-base;
+    @include text-ellipsis;
+  }
+
+  /* Handle: link only */
+  &__channelHandle {
+    font-size: $text-xs;
+    color: $text-secondary;
+    @include text-ellipsis;
+  }
+
+  &__channelHandleLink {
+    display: inline-block;
+    color: inherit;
+    text-decoration: none;
+
+    &:hover .watch-video__channelHandle {
+      color: $text-primary;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  }
+
+  &__subscribeBtn {
+    border-radius: $radius-full;
+    padding: $spacing-2 $spacing-5;
+    font-size: $text-sm;
+    flex-shrink: 0;
+  }
+}
+
