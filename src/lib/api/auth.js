@@ -190,8 +190,7 @@ export function setupInterceptors(store) {
       }
 
       if (status === 403) {
-        if (AXIOS_DEBUG) console.log('[AXIOS] 403 -> clearUser()')
-        store.dispatch(clearUser())
+        return Promise.reject(error)
       }
 
       return Promise.reject(error)

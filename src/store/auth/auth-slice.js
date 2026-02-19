@@ -1,5 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { registration, login, logout, getCurrentUser, editUser, updateUser, deleteUser } from './auth-operations'
+import { reactVideo } from '@/store/videos/videos-operations'
+import { subscribeChannel } from '@/store/channel/channel-operations'
 
 const initialState = {
   user: {},
@@ -77,6 +79,7 @@ const auth = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.loading = false
         state.isLogin = false
+        state.user = {}
       })
       .addCase(logout.rejected, (state, { payload }) => {
         state.loading = false
@@ -146,6 +149,20 @@ const auth = createSlice({
         state.loading = false
         state.isLogin = false
         state.error = payload ? errMsg(payload) : null
+      })
+      // REACT VIDEO -> update user doc (when logged-in)
+      .addCase(reactVideo.fulfilled, (state, { payload }) => {
+        if (payload?.actorType !== 'user') return
+        const u = payload?.user
+        if (!u) return
+        state.user = u
+        state.isLogin = true
+      })
+      .addCase(subscribeChannel.fulfilled, (state, { payload }) => {
+        const u = payload?.user
+        if (!u) return
+        state.user = u
+        state.isLogin = true
       })
   },
 })

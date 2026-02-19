@@ -56,8 +56,29 @@
       font-size: $text-lg;
     }
 
-    &:hover {
+    &:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    &--active {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    &--active:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    &--active svg {
+      transform: translateY(-0.5px);
+    }
+
+    &--active span {
+      font-weight: $font-semibold;
     }
   }
 

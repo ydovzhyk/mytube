@@ -8,6 +8,7 @@ import { getVideosLoading } from '@/store/videos/videos-selectors'
 import { getTechnicalLoading } from '../store/technical/technical-selectors'
 import { getPlaylistsLoading } from '@/store/playlists/playlists-selectors'
 
+
 export default function LoaderListener() {
   const authLoading = useSelector(getLoadingAuth)
   const isRefreshing = useSelector(getIsRefreshing)

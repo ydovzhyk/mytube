@@ -9,6 +9,7 @@ import {
   axiosVideoView,
   axiosGetWatchVideo,
   axiosGetSimilarVideos,
+  axiosReactVideo,
 } from '@/lib/api/videos'
 import { axiosCreatePlaylist } from '@/lib/api/playlists'
 import { setUploadProgress } from './videos-slice'
@@ -43,7 +44,6 @@ export const getVideos = createAsyncThunk(
   'videos/get-videos',
   async (params, { rejectWithValue }) => {
     try {
-      // params може бути undefined, або { page, limit, q, ... } — як у твоєму API
       const data = await axiosGetVideos(params)
       return data
     } catch (e) {
@@ -103,7 +103,6 @@ export const getSimilarVideos = createAsyncThunk(
   'videos/get-similar-videos',
   async (params, { rejectWithValue }) => {
     try {
-      // params: { id, cursor }
       const data = await axiosGetSimilarVideos(params)
       return data
     } catch (e) {
@@ -136,11 +135,38 @@ export const getSubscriptionVideos = createAsyncThunk(
   }
 )
 
+export const reactVideo = createAsyncThunk(
+  'videos/react-video',
+  async (params, { rejectWithValue, getState }) => {
+    try {
+      const state = getState()
+
+      const id = String(params?.id || '').trim()
+      if (!id) throw new Error('Video id is required')
+
+      const loggedIn = Boolean(state.auth?.isLogin)
+      const visitorId = String(state.visitor?.id || params?.visitorId || '').trim()
+
+      const payload = loggedIn
+        ? { ...params, id, visitorId: undefined }
+        : { ...params, id, visitorId }
+
+      if (!loggedIn && !payload.visitorId) {
+        throw new Error('visitorId is required for guests')
+      }
+
+      const data = await axiosReactVideo(payload)
+      return data
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
+
 export const deleteVideo = createAsyncThunk(
   'videos/delete-video',
   async (params, { rejectWithValue }) => {
     try {
-      // params: { videoId } або { id } — як у твоєму API
       const data = await axiosDeleteVideo(params)
       return data
     } catch (e) {

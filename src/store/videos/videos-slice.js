@@ -8,6 +8,7 @@ import {
   getWatchVideo,
   getSimilarVideos,
   deleteVideo,
+  reactVideo,
 } from './videos-operations'
 
 const initialState = {
@@ -278,6 +279,23 @@ const videos = createSlice({
       })
       .addCase(deleteVideo.rejected, (state, { payload }) => {
         state.loading = false
+        state.error = errMsg(payload)
+      })
+
+      .addCase(reactVideo.pending, (state) => {
+        state.error = null
+      })
+      .addCase(reactVideo.fulfilled, (state, { payload }) => {
+        // { videoId, myReaction, stats, actorType, user, visitor }
+        const cur = state.watch.currentVideo
+        if (!cur) return
+        if (String(cur._id) !== String(payload?.videoId)) return
+
+        if (!cur.stats) cur.stats = {}
+        cur.stats.likes = payload?.stats?.likes ?? cur.stats.likes ?? 0
+        cur.stats.dislikes = payload?.stats?.dislikes ?? cur.stats.dislikes ?? 0
+      })
+      .addCase(reactVideo.rejected, (state, { payload }) => {
         state.error = errMsg(payload)
       })
   },

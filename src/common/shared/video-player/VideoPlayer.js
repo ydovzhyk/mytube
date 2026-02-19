@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import clsx from 'clsx'
-import pushWatchHistoryId from '@/utils/push-watch-history'
 import {
   getVolumeLevel,
   getMuted,
@@ -214,7 +213,6 @@ export default function VideoPlayer({
 
     sentThisSessionRef.current = true
     markViewedNow(videoId)
-    pushWatchHistoryId(videoId)
     onWatched?.(videoId)
 
     try {
@@ -703,7 +701,13 @@ export default function VideoPlayer({
                   onClick={toggleMute}
                   aria-label="Mute"
                 >
-                  {effectiveMuted || volume === 0 ? <HiVolumeOff /> : <HiVolumeUp />}
+                  {!hydrated ? (
+                    <HiVolumeOff />
+                  ) : effectiveMuted || volume === 0 ? (
+                    <HiVolumeOff />
+                  ) : (
+                    <HiVolumeUp />
+                  )}
                 </button>
 
                 <input
@@ -788,7 +792,10 @@ export default function VideoPlayer({
               </div>
 
               <button
-                className={clsx('video-player__btn', fullscreenWanted && 'video-player__btn--active')}
+                className={clsx(
+                  'video-player__btn',
+                  fullscreenWanted && 'video-player__btn--active'
+                )}
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation()

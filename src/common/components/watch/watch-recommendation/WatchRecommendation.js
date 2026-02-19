@@ -3,7 +3,6 @@
 import { useCallback, useMemo } from 'react'
 import clsx from 'clsx'
 import { useDispatch, useSelector } from 'react-redux'
-import readWatchHistory from '@/utils/read-watch-history'
 import { useTranslate } from '@/utils/translating/translating'
 
 import { getSimilarVideos } from '@/store/videos/videos-operations'
@@ -15,6 +14,9 @@ import {
   getWatchSimilarFilter,
 } from '@/store/videos/videos-selectors'
 import { setWatchSimilarFilter } from '@/store/videos/videos-slice'
+
+import { getLogin } from '@/store/auth/auth-selectors'
+import { getVisitorId } from '@/store/visitor/visitor-selectors'
 
 import Button from '@/common/shared/button/Button'
 import MiniVideoCard from '@/common/shared/mini-video-card/MiniVideoCard'
@@ -28,11 +30,7 @@ const FILTERS = [
   { key: 'recent', label: 'Recently uploaded' },
 ]
 
-export default function WatchRecommendation({
-  videoId,
-  currentId,
-  onSelectVideo,
-}) {
+export default function WatchRecommendation({ videoId, currentId, onSelectVideo }) {
   const dispatch = useDispatch()
 
   const loading = useSelector(getVideosLoading)
@@ -40,6 +38,9 @@ export default function WatchRecommendation({
   const hasMore = useSelector(getWatchSimilarHasMore)
   const nextCursor = useSelector(getWatchSimilarNextCursor)
   const filter = useSelector(getWatchSimilarFilter)
+
+  const loggedIn = useSelector(getLogin)
+  const visitorId = useSelector(getVisitorId)
 
   const labelRec = useTranslate('less')
 
@@ -49,17 +50,20 @@ export default function WatchRecommendation({
     return arr.filter((x) => String(x?._id) !== String(currentId))
   }, [items, currentId])
 
+  const buildVisitorIdParam = useCallback(
+    (f) => {
+      // тільки для watched, і тільки для гостя
+      if (f !== 'watched') return undefined
+      if (loggedIn) return undefined
+      return visitorId || undefined
+    },
+    [loggedIn, visitorId]
+  )
+
   const applyFilter = useCallback(
     (nextFilter) => {
       if (!videoId) return
       const f = nextFilter || 'all'
-
-      const watchedIds =
-        f === 'watched'
-          ? readWatchHistory()
-              .map((x) => x.videoId)
-              .filter((vid) => String(vid) !== String(currentId))
-          : undefined
 
       dispatch(setWatchSimilarFilter(f))
       dispatch(
@@ -67,11 +71,11 @@ export default function WatchRecommendation({
           id: videoId,
           cursor: null,
           filter: f,
-          watchedIds,
+          visitorId: buildVisitorIdParam(f),
         })
       )
     },
-    [dispatch, videoId, currentId]
+    [dispatch, videoId, buildVisitorIdParam]
   )
 
   const onLoadMore = useCallback(() => {
@@ -79,42 +83,44 @@ export default function WatchRecommendation({
     if (!hasMore) return
     if (loading) return
 
-    const watchedIds =
-      filter === 'watched'
-        ? readWatchHistory()
-            .map((x) => x.videoId)
-            .filter((vid) => String(vid) !== String(currentId))
-        : undefined
-
     dispatch(
       getSimilarVideos({
         id: videoId,
         cursor: nextCursor,
         filter,
-        watchedIds,
+        visitorId: buildVisitorIdParam(filter),
       })
     )
-  }, [dispatch, videoId, hasMore, loading, nextCursor, filter, currentId])
+  }, [dispatch, videoId, hasMore, loading, nextCursor, filter, buildVisitorIdParam])
+
+  // (опційно) заблокувати watched для гостя, поки visitorId ще не готовий
+  const watchedDisabled = !loggedIn && !visitorId
 
   return (
     <div className="watch-reco">
       <div className="watch-reco__top">
         <div className="watch-reco__filters" role="tablist" aria-label={labelRec}>
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              type="button"
-              className={clsx(
-                'watch-reco__filter',
-                filter === f.key && 'watch-reco__filter--active'
-              )}
-              onClick={() => applyFilter(f.key)}
-              role="tab"
-              aria-selected={filter === f.key}
-            >
-              <T>{f.label}</T>
-            </button>
-          ))}
+          {FILTERS.map((f) => {
+            const disabled = f.key === 'watched' ? watchedDisabled : false
+
+            return (
+              <button
+                key={f.key}
+                type="button"
+                disabled={disabled}
+                className={clsx(
+                  'watch-reco__filter',
+                  filter === f.key && 'watch-reco__filter--active',
+                  disabled && 'watch-reco__filter--disabled'
+                )}
+                onClick={() => applyFilter(f.key)}
+                role="tab"
+                aria-selected={filter === f.key}
+              >
+                <T>{f.label}</T>
+              </button>
+            )
+          })}
         </div>
       </div>
 

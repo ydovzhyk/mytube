@@ -6,6 +6,7 @@ import {
   deleteChannel,
   getPublicChannelByHandle,
   getChannelById,
+  subscribeChannel,
 } from './channel-operations'
 
 const initialState = {
@@ -119,6 +120,21 @@ const channelsSlice = createSlice({
       })
       .addCase(getChannelById.rejected, (state, { payload }) => {
         state.loading = false
+        state.error = errMsg(payload)
+      })
+      // * Subscribe channel
+      .addCase(subscribeChannel.pending, (state) => {
+        state.error = null
+        state.message = null
+      })
+      .addCase(subscribeChannel.fulfilled, (state, { payload }) => {
+        state.message = payload?.subscribed === true
+          ? okMsg(payload, 'Subscription updated')
+          : payload?.subscribed === false
+          ? okMsg(payload, 'Unsubscribed')
+          : null
+      })
+      .addCase(subscribeChannel.rejected, (state, { payload }) => {
         state.error = errMsg(payload)
       })
   },

@@ -15,6 +15,7 @@ import channelsReducer from './channel/channel-slice'
 import technicalReducer from './technical/technical-slice'
 import videosReducer from './videos/videos-slice'
 import playlistsReducer from './playlists/playlists-slice'
+import visitorReducer from './visitor/visitor-slice'
 import { setupInterceptors } from '../lib/api/auth'
 // import logger from 'redux-logger'
 
@@ -26,7 +27,7 @@ const createPersistedAuthReducer = () => {
   const cfg = {
     key: 'auth-local',
     storage,
-    whitelist: [], // залишаємо як у тебе
+    whitelist: [],
   }
   return persistReducer(cfg, authReducer)
 }
@@ -59,6 +60,7 @@ export const store = configureStore({
     channels: channelsReducer,
     videos: videosReducer,
     playlists: playlistsReducer,
+    visitor: visitorReducer,
   },
   middleware: (getDefaultMiddleware) => {
     const middlewares = getDefaultMiddleware({

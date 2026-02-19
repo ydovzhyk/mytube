@@ -74,20 +74,17 @@ export const axiosGetWatchVideo = async ({ id, list } = {}) => {
   return data
 }
 
-// helper: watchedIds -> "id1,id2,id3"
-const watchedIdsToCsv = (watchedIds) => {
-  if (!Array.isArray(watchedIds)) return undefined
-  const ids = watchedIds
-    .map((x) => String(x || '').trim())
-    .filter(Boolean)
-  return ids.length ? ids.join(',') : undefined
+export const axiosGetSimilarVideos = async ({ id, cursor, filter, visitorId } = {}) => {
+  const videoId = String(id || '').trim()
+  const { data } = await instance.get(`/videos/${videoId}/similar`, {
+    params: cleanParams({ cursor, filter, visitorId }),
+  })
+  return data
 }
 
-export const axiosGetSimilarVideos = async ({ id, cursor, filter, watchedIds } = {}) => {
+export const axiosReactVideo = async ({ id, value, visitorId } = {}) => {
   const videoId = String(id || '').trim()
-  const watchedIdsCsv = watchedIdsToCsv(watchedIds)
-  const { data } = await instance.get(`/videos/${videoId}/similar`, {
-    params: cleanParams({ cursor, filter, watchedIds: watchedIdsCsv }),
-  })
+  if (!videoId) throw new Error('Video id is required for react')
+  const { data } = await instance.post(`/videos/${videoId}/react`, { value, visitorId })
   return data
 }

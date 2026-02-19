@@ -22,6 +22,9 @@ import { clearTechnicalError, clearTechnicalMessage } from '@/store/technical/te
 import { getVideosError, getVideosMessage } from '@/store/videos/videos-selectors'
 import { clearVideosError, clearVideosMessage } from '@/store/videos/videos-slice'
 
+import { getVisitorError } from '@/store/visitor/visitor-selectors'
+import { clearVisitorError } from '@/store/visitor/visitor-slice'
+
 const toStr = (v) => {
   if (!v) return ''
   if (typeof v === 'string') return v
@@ -105,6 +108,8 @@ export default function ToastListener() {
   const videosError = useSelector(getVideosError)
   const videosMessage = useSelector(getVideosMessage)
 
+  const visitorError = useSelector(getVisitorError)
+
   useToastPair({
     error: channelsError,
     message: channelsMessage,
@@ -138,6 +143,11 @@ export default function ToastListener() {
     message: videosMessage,
     clearError: clearVideosError,
     clearMessage: clearVideosMessage,
+  })
+
+  useToastPair({
+    error: visitorError,
+    clearError: clearVisitorError,
   })
 
   return null

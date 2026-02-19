@@ -48,3 +48,11 @@ export const axiosCheckHandle = async ({ handle, signal }) => {
   return data // { handle, available }
 }
 
+export const axiosSubscribeChannel = async (channelId) => {
+  const id = String(channelId || '').trim()
+  if (!id) throw new Error('channelId is required')
+
+  const { data } = await instance.post(`/channels/${id}/subscribe`)
+  return data
+}
+

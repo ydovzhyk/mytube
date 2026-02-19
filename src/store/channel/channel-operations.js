@@ -6,6 +6,7 @@ import {
   axiosGetChannelById,
   axiosUpdateChannel,
   axiosDeleteChannel,
+  axiosSubscribeChannel,
 } from '@/lib/api/channel'
 import { getCurrentUser } from '../auth/auth-operations'
 
@@ -21,7 +22,7 @@ export const fetchMyChannels = createAsyncThunk(
   'channels/fetch-my',
   async (_, { rejectWithValue }) => {
     try {
-      const data = await axiosGetMyChannels() // { channels }
+      const data = await axiosGetMyChannels()
       return data
     } catch (e) {
       return toReject(e, rejectWithValue)
@@ -33,7 +34,7 @@ export const createChannel = createAsyncThunk(
   'channels/create',
   async (formData, {dispatch, rejectWithValue }) => {
     try {
-      const data = await axiosCreateChannel(formData) // { channel }
+      const data = await axiosCreateChannel(formData)
       if (data) {
         dispatch(fetchMyChannels())
         dispatch(getCurrentUser())
@@ -49,7 +50,7 @@ export const getPublicChannelByHandle = createAsyncThunk(
   'channels/get-by-handle',
   async (handle, { rejectWithValue }) => {
     try {
-      return await axiosGetPublicChannelByHandle(handle) // { channel }
+      return await axiosGetPublicChannelByHandle(handle)
     } catch (e) {
       return toReject(e, rejectWithValue)
     }
@@ -60,7 +61,7 @@ export const getChannelById = createAsyncThunk(
   'channels/get-by-id',
   async (id, { rejectWithValue }) => {
     try {
-      return await axiosGetChannelById(id) // { channel }
+      return await axiosGetChannelById(id)
     } catch (e) {
       return toReject(e, rejectWithValue)
     }
@@ -71,7 +72,7 @@ export const updateChannel = createAsyncThunk(
   'channels/update',
   async ({ id, formData }, {dispatch, rejectWithValue }) => {
     try {
-      const data = await axiosUpdateChannel({ id, formData }) // { channel }
+      const data = await axiosUpdateChannel({ id, formData })
       if (data) {
         dispatch(fetchMyChannels())
       }
@@ -82,11 +83,22 @@ export const updateChannel = createAsyncThunk(
   }
 )
 
+export const subscribeChannel = createAsyncThunk(
+  'channels/subscribe',
+  async (channelId, { rejectWithValue }) => {
+    try {
+      return await axiosSubscribeChannel(channelId)
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
+
 export const deleteChannel = createAsyncThunk(
   'channels/delete',
   async (id, {dispatch, rejectWithValue }) => {
     try {
-      const data = await axiosDeleteChannel(id) // { message }
+      const data = await axiosDeleteChannel(id)
       if (data) {
         dispatch(fetchMyChannels())
       }

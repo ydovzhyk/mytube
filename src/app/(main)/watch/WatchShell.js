@@ -1,12 +1,14 @@
 'use client'
 
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams, useRouter } from 'next/navigation'
 
 import { videoView } from '@/store/videos/videos-operations'
 import { updateUser } from '@/store/auth/auth-operations'
+import { updateVisitor } from '@/store/visitor/visitor-operations'
 import { getLogin } from '@/store/auth/auth-selectors'
+import { getVisitorId } from '@/store/visitor/visitor-selectors'
 import {
   getWatchCurrentVideo,
   getWatchPlaylist,
@@ -21,8 +23,6 @@ import WatchPlaylistPanel from '@/common/components/watch/watch-playlist/WatchPl
 import WatchRecommendation from '@/common/components/watch/watch-recommendation/WatchRecommendation'
 import VideoPlayer from '@/common/shared/video-player/VideoPlayer'
 import WatchVideoPanel from '@/common/components/watch/watch-video-panel/WatchVideoPanel'
-import Button from '@/common/shared/button/Button'
-import { HiOutlineHeart } from 'react-icons/hi'
 import T from '@/common/shared/i18n/T'
 import { IoCloseOutline } from 'react-icons/io5'
 
@@ -66,6 +66,67 @@ function popBack(dispatch) {
   return prevId
 }
 
+function VideoDescriptionPanel({ video }) {
+  const DESC_LIMIT = 200
+  const [showMoreDesc, setShowMoreDesc] = useState(false)
+
+  const tags = useMemo(() => {
+    const arr = video?.tags
+    if (!Array.isArray(arr)) return []
+    return arr
+      .map((t) => String(t || '').trim())
+      .filter(Boolean)
+      .slice(0, 5)
+  }, [video?.tags])
+
+  const hasTags = tags.length > 0
+
+  const description = String(video?.description || '')
+  const hasDesc = Boolean(description.trim())
+
+  const showToggle = hasDesc && description.length > DESC_LIMIT
+
+  const descShort = useMemo(() => {
+    if (!hasDesc) return ''
+    if (description.length <= DESC_LIMIT) return description
+    return description.slice(0, DESC_LIMIT).trim() + '…'
+  }, [description, hasDesc])
+
+  if (!hasTags && !hasDesc) return null
+
+  return (
+    <div className="video-description">
+      {hasTags ? (
+        <div className="video-description__topRow">
+          <div className="video-description__tags">
+            {tags.map((t) => (
+              <span key={t} className="video-description__tag" title={`#${t}`}>
+                #{t}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {hasDesc ? (
+        <div className="video-description__textRow">
+          <span className="video-description__text">{showMoreDesc ? description : descShort}</span>
+
+          {showToggle ? (
+            <button
+              type="button"
+              className="video-description__more"
+              onClick={() => setShowMoreDesc((v) => !v)}
+            >
+              {showMoreDesc ? <T caseMode="lower">less</T> : <T caseMode="lower">...more</T>}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export default function WatchShell({ children }) {
   const dispatch = useDispatch()
   const router = useRouter()
@@ -78,6 +139,7 @@ export default function WatchShell({ children }) {
   const similarItems = useSelector(getWatchSimilarItems)
   const showPlaylist = useSelector(getShowPlaylist)
   const loggedIn = useSelector(getLogin)
+  const visitorId = useSelector(getVisitorId)
 
   const activeId = currentVideo?._id || urlId || null
 
@@ -161,7 +223,9 @@ export default function WatchShell({ children }) {
           initialQuality={720}
           onView={(vid) => {
             const p1 = dispatch(videoView(vid))
-            const p2 = loggedIn ? dispatch(updateUser({ watchedVideoId: vid })) : Promise.resolve()
+            const p2 = loggedIn
+              ? dispatch(updateUser({ watchedVideoId: vid}))
+              : dispatch(updateVisitor({ watchedVideoId: vid, visitorId }))
             return Promise.all([p1, p2])
           }}
           hasNext={hasNext}
@@ -177,9 +241,8 @@ export default function WatchShell({ children }) {
           <>
             <WatchVideoPanel video={currentVideo} videoId={activeId} />
 
-            <div className="video-description">
-              <div className="video-description__content">{currentVideo.description || ''}</div>
-            </div>
+            {/* key resets internal showMoreDesc automatically when activeId changes */}
+            <VideoDescriptionPanel key={String(activeId || '')} video={currentVideo} />
           </>
         )}
       </div>
