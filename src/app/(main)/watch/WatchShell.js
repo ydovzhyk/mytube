@@ -16,8 +16,8 @@ import {
   getShowPlaylist,
 } from '@/store/videos/videos-selectors'
 import { setShowPlaylist } from '@/store/videos/videos-slice'
-import { getBackPrevAllowed } from '@/store/technical/technical-selectors'
-import { setBackPrevAllowed } from '@/store/technical/technical-slice'
+import { getBackPrevAllowed } from '@/store/player/player-selectors'
+import { setBackPrevAllowed } from '@/store/player/player-slice'
 
 import WatchPlaylistPanel from '@/common/components/watch/watch-playlist/WatchPlaylistPanel'
 import WatchRecommendation from '@/common/components/watch/watch-recommendation/WatchRecommendation'

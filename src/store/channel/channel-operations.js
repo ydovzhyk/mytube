@@ -11,11 +11,9 @@ import {
 import { getCurrentUser } from '../auth/auth-operations'
 
 const toReject = (error, rejectWithValue) => {
-  const { data, status } = error.response || {
-    data: { message: error.message },
-    status: 0,
-  }
-  return rejectWithValue({ data, status })
+  const status = error?.response?.status || 0
+  const data = error?.response?.data || { message: error?.message || 'Request failed' }
+  return rejectWithValue({ status, data })
 }
 
 export const fetchMyChannels = createAsyncThunk(

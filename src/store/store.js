@@ -16,6 +16,7 @@ import technicalReducer from './technical/technical-slice'
 import videosReducer from './videos/videos-slice'
 import playlistsReducer from './playlists/playlists-slice'
 import visitorReducer from './visitor/visitor-slice'
+import playerReducer from './player/player-slice'
 import { setupInterceptors } from '../lib/api/auth'
 // import logger from 'redux-logger'
 
@@ -32,12 +33,12 @@ const createPersistedAuthReducer = () => {
   return persistReducer(cfg, authReducer)
 }
 
-const createPersistedTechnicalReducer = () => {
-  if (isServer) return technicalReducer
+const createPersistedPlayerReducer = () => {
+  if (isServer) return playerReducer
   const storage = require('redux-persist/lib/storage').default
 
   const cfg = {
-    key: 'tech-local',
+    key: 'player-local',
     storage,
     whitelist: [
       'volumeLevel',
@@ -47,16 +48,17 @@ const createPersistedTechnicalReducer = () => {
     ],
   }
 
-  return persistReducer(cfg, technicalReducer)
+  return persistReducer(cfg, playerReducer)
 }
 
 const finalAuthReducer = createPersistedAuthReducer()
-const finalTechnicalReducer = createPersistedTechnicalReducer()
+const finalPlayerReducer = createPersistedPlayerReducer()
 
 export const store = configureStore({
   reducer: {
     auth: finalAuthReducer,
-    technical: finalTechnicalReducer,
+    technical: technicalReducer,
+    player: finalPlayerReducer,
     channels: channelsReducer,
     videos: videosReducer,
     playlists: playlistsReducer,

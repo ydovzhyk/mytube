@@ -157,10 +157,13 @@ export function Header({ onMenuClick }) {
 
                     <button
                       className="dropdown__item dropdown__item--danger"
-                      onClick={() => {
+                      onClick={async () => {
                         setIsDropdownOpen(false)
-                        dispatch(logout())
-                        router.push('/')
+                        try {
+                          await dispatch(logout()).unwrap()
+                        } finally {
+                          router.push('/')
+                        }
                       }}
                     >
                       <T caseMode="sentence">sign out</T>

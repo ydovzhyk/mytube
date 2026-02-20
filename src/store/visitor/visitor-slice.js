@@ -27,6 +27,10 @@ const visitorSlice = createSlice({
     clearVisitorError(state) {
       state.error = null
     },
+    resetVisitor(state) {
+      state.id = null
+      state.visitor = {}
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -69,5 +73,5 @@ const visitorSlice = createSlice({
   },
 })
 
-export const { clearVisitorId, clearVisitorError } = visitorSlice.actions
+export const { clearVisitorId, clearVisitorError, resetVisitor } = visitorSlice.actions
 export default visitorSlice.reducer

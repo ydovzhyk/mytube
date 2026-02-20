@@ -9,52 +9,52 @@ import {
   axiosDeleteUser,
 } from '../../lib/api/auth';
 import { clearUser } from './auth-slice';
+import { resetVisitor } from '../visitor/visitor-slice';
+import { initVisitor } from '../visitor/visitor-operations';
 
 const toReject = (error, rejectWithValue) => {
-  const { data, status } = error.response || {
-    data: { message: error.message },
-    status: 0,
-  }
-  return rejectWithValue({ data, status })
+  const status = error?.response?.status || 0
+  const data = error?.response?.data || { message: error?.message || 'Request failed' }
+  return rejectWithValue({ status, data })
 }
-
-export const registration = createAsyncThunk(
-  'auth/register',
-  async (userData, { rejectWithValue }) => {
-    try {
-      const data = await axiosRegister(userData)
-      return data
-    } catch (e) {
-      return toReject(e, rejectWithValue)
-    }
-  }
-);
 
 export const login = createAsyncThunk(
   'auth/login',
-  async (userData, { rejectWithValue }) => {
+  async (body, { dispatch, rejectWithValue }) => {
+  try {
+    const data = await axiosLogin(body)
+    dispatch(resetVisitor())
+    return data
+  } catch (e) {
+    return toReject(e, rejectWithValue)
+  }
+})
+
+export const registration = createAsyncThunk(
+  'auth/register',
+  async (body, { dispatch, rejectWithValue }) => {
     try {
-      const data = await axiosLogin(userData)
+      const data = await axiosRegister(body)
+      dispatch(resetVisitor())
       return data
     } catch (e) {
       return toReject(e, rejectWithValue)
     }
   }
-);
+)
 
-export const logout = createAsyncThunk(
-  'auth/logout',
-  async (_, { dispatch }) => {
-    try {
-      await axiosLogout();
-    } catch (e) {
-      // no-op
-    } finally {
-      dispatch(clearUser());
-    }
-    return { ok: true };
+export const logout = createAsyncThunk('auth/logout', async (_, { dispatch }) => {
+  try {
+    await axiosLogout()
+  } catch (e) {
+    // no-op
+  } finally {
+    dispatch(clearUser())
+    dispatch(resetVisitor())
+    dispatch(initVisitor())
   }
-);
+  return { ok: true }
+})
 
 export const getCurrentUser = createAsyncThunk(
   'auth/current',

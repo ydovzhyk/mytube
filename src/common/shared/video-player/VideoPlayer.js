@@ -8,13 +8,13 @@ import {
   getMuted,
   getPreferredQuality,
   getFullscreenWanted,
-} from '@/store/technical/technical-selectors'
+} from '@/store/player/player-selectors'
 import {
   setVolumeLevel,
   setMuted,
   setPreferredQuality,
   setFullscreenWanted,
-} from '@/store/technical/technical-slice'
+} from '@/store/player/player-slice'
 import { HiVolumeUp, HiVolumeOff, HiCog, HiArrowsExpand, HiRefresh } from 'react-icons/hi'
 
 function clamp(n, a, b) {
