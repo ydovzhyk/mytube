@@ -4,16 +4,13 @@ import { useCallback, useMemo, useState } from 'react'
 import Link from 'next/link'
 import clsx from 'clsx'
 import { useDispatch, useSelector } from 'react-redux'
-
 import { getUser, getLogin } from '@/store/auth/auth-selectors'
 import { getVisitorId, getVisitorData } from '@/store/visitor/visitor-selectors'
 import { reactVideo } from '@/store/videos/videos-operations'
 import { subscribeChannel } from '@/store/channel/channel-operations'
-
 import Button from '@/common/shared/button/Button'
 import T from '@/common/shared/i18n/T'
 import formatRelativeDateNode from '@/utils/formatRelativeDateNode'
-
 import { HiOutlineThumbDown, HiOutlineThumbUp } from 'react-icons/hi'
 import { IoNotificationsOutline, IoShareOutline } from 'react-icons/io5'
 

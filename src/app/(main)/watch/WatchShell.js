@@ -3,25 +3,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams, useRouter } from 'next/navigation'
-
-import { videoView } from '@/store/videos/videos-operations'
-import { updateUser } from '@/store/auth/auth-operations'
-import { updateVisitor } from '@/store/visitor/visitor-operations'
-import { getLogin } from '@/store/auth/auth-selectors'
-import { getVisitorId } from '@/store/visitor/visitor-selectors'
+import { getPlayerCurrentVideoId } from '@/store/player/player-selectors'
+import { setBackPrevAllowed } from '@/store/player/player-slice'
 import {
   getWatchCurrentVideo,
   getWatchPlaylist,
-  getWatchSimilarItems,
   getShowPlaylist,
 } from '@/store/videos/videos-selectors'
 import { setShowPlaylist } from '@/store/videos/videos-slice'
-import { getBackPrevAllowed } from '@/store/player/player-selectors'
-import { setBackPrevAllowed } from '@/store/player/player-slice'
-
 import WatchPlaylistPanel from '@/common/components/watch/watch-playlist/WatchPlaylistPanel'
 import WatchRecommendation from '@/common/components/watch/watch-recommendation/WatchRecommendation'
-import VideoPlayer from '@/common/shared/video-player/VideoPlayer'
 import WatchVideoPanel from '@/common/components/watch/watch-video-panel/WatchVideoPanel'
 import T from '@/common/shared/i18n/T'
 import { IoCloseOutline } from 'react-icons/io5'
@@ -57,15 +48,6 @@ function pushBack(currentId, dispatch) {
   dispatch?.(setBackPrevAllowed(stack.length > 0))
 }
 
-function popBack(dispatch) {
-  if (typeof window === 'undefined') return null
-  const stack = readBackStack()
-  const prevId = stack.pop() || null
-  writeBackStack(stack)
-  dispatch?.(setBackPrevAllowed(stack.length > 0))
-  return prevId
-}
-
 function VideoDescriptionPanel({ video }) {
   const DESC_LIMIT = 200
   const [showMoreDesc, setShowMoreDesc] = useState(false)
@@ -80,12 +62,10 @@ function VideoDescriptionPanel({ video }) {
   }, [video?.tags])
 
   const hasTags = tags.length > 0
-
   const description = String(video?.description || '')
   const hasDesc = Boolean(description.trim())
 
   const showToggle = hasDesc && description.length > DESC_LIMIT
-
   const descShort = useMemo(() => {
     if (!hasDesc) return ''
     if (description.length <= DESC_LIMIT) return description
@@ -132,55 +112,33 @@ export default function WatchShell({ children }) {
   const router = useRouter()
   const params = useParams()
 
-  const urlId = params?.id
+  const urlId = params?.id ? String(params.id) : null
 
+  // data for UI panels (title/desc/channel etc.)
   const currentVideo = useSelector(getWatchCurrentVideo)
   const playlist = useSelector(getWatchPlaylist)
-  const similarItems = useSelector(getWatchSimilarItems)
   const showPlaylist = useSelector(getShowPlaylist)
-  const loggedIn = useSelector(getLogin)
-  const visitorId = useSelector(getVisitorId)
 
-  const activeId = currentVideo?._id || urlId || null
-
-  const sources = currentVideo?.sources || {}
-  const availableQualities = currentVideo?.availableQualities || [360, 480, 720]
-  const poster = currentVideo?.thumbnailUrl || ''
+  // active playing id should come from player slice (persisted + queue-driven)
+  const playerId = useSelector(getPlayerCurrentVideoId)
+  const activeId =
+    playerId || (currentVideo?._id ? String(currentVideo._id) : null) || urlId || null
 
   const playlistItems = useMemo(
     () => (Array.isArray(playlist?.items) ? playlist.items : []),
     [playlist]
   )
 
-  const playlistIndex = useMemo(() => {
-    if (!playlistItems.length || !activeId) return -1
-    return playlistItems.findIndex((x) => String(x?._id) === String(activeId))
-  }, [playlistItems, activeId])
-
-  const inPlaylist = Boolean(playlistItems.length && playlistIndex >= 0)
-
-  const hasPrev = useSelector(getBackPrevAllowed)
-
   useEffect(() => {
     dispatch(setBackPrevAllowed(readBackStack().length > 0))
   }, [dispatch, urlId])
 
-  const recommendedNext = useMemo(() => {
-    const curId = String(activeId || '')
-    return (Array.isArray(similarItems) ? similarItems : []).find(
-      (x) => String(x?._id) && String(x?._id) !== curId
-    )
-  }, [similarItems, activeId])
-
-  const hasPlaylistNext =
-    inPlaylist && playlistIndex >= 0 && playlistIndex < playlistItems.length - 1
-
-  const hasNext = Boolean(hasPlaylistNext || recommendedNext?._id)
-
   const goToVideo = useCallback(
     (nextId) => {
       if (!nextId) return
-      sessionStorage.setItem('mytube:gesture', '1')
+      try {
+        sessionStorage.setItem('mytube:gesture', '1')
+      } catch {}
       router.push(`/watch/${nextId}`)
     },
     [router]
@@ -196,52 +154,15 @@ export default function WatchShell({ children }) {
     [activeId, goToVideo, dispatch]
   )
 
-  const goNext = useCallback(() => {
-    if (hasPlaylistNext) {
-      const next = playlistItems[playlistIndex + 1]
-      if (next?._id) navigateTo(next._id)
-      return
-    }
-
-    if (recommendedNext?._id) navigateTo(recommendedNext._id)
-  }, [hasPlaylistNext, playlistItems, playlistIndex, navigateTo, recommendedNext])
-
-  const goPrev = useCallback(() => {
-    if (!hasPrev) return
-    const prevId = popBack(dispatch)
-    if (prevId) goToVideo(prevId)
-  }, [hasPrev, goToVideo, dispatch])
-
   return (
     <div className="watch-page">
       <div className="watch-page__main">
-        <VideoPlayer
-          videoId={activeId}
-          poster={poster}
-          sources={sources}
-          availableQualities={availableQualities}
-          initialQuality={720}
-          onView={(vid) => {
-            const p1 = dispatch(videoView(vid))
-            const p2 = loggedIn
-              ? dispatch(updateUser({ watchedVideoId: vid}))
-              : dispatch(updateVisitor({ watchedVideoId: vid, visitorId }))
-            return Promise.all([p1, p2])
-          }}
-          hasNext={hasNext}
-          hasPrev={hasPrev}
-          onNext={goNext}
-          onPrev={goPrev}
-          onEnded={goNext}
-        />
-
+        {/* SLOT: real VideoPlayer is rendered in PlayerShell on top of this */}
+        <div id="watch-player-slot" className="watch-player-slot" />
         {children}
-
         {currentVideo && (
           <>
             <WatchVideoPanel video={currentVideo} videoId={activeId} />
-
-            {/* key resets internal showMoreDesc automatically when activeId changes */}
             <VideoDescriptionPanel key={String(activeId || '')} video={currentVideo} />
           </>
         )}

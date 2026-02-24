@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch, useSelector, useStore } from 'react-redux'
 import clsx from 'clsx'
 import {
   getVolumeLevel,
@@ -14,8 +14,17 @@ import {
   setMuted,
   setPreferredQuality,
   setFullscreenWanted,
+  setPlaybackTime,
 } from '@/store/player/player-slice'
-import { HiVolumeUp, HiVolumeOff, HiCog, HiArrowsExpand, HiRefresh } from 'react-icons/hi'
+import {
+  HiVolumeUp,
+  HiVolumeOff,
+  HiCog,
+  HiArrowsExpand,
+  HiRefresh,
+  HiX,
+  HiArrowLeft,
+} from 'react-icons/hi'
 
 function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n))
@@ -30,16 +39,10 @@ function formatTime(sec = 0) {
   return `${m}:${String(r).padStart(2, '0')}`
 }
 
-/**
- * MVP view rule:
- * - if duration <= 60s: count when watched >= 15s OR watched >= 80%
- * - else: count when watched >= 30s OR watched >= 60%
- */
 function canCountView({ duration, watchedSeconds }) {
   const d = Number(duration) || 0
   const w = Number(watchedSeconds) || 0
   if (!d || !w) return false
-
   if (d <= 60) return w >= 15 || w / d >= 0.8
   return w >= 30 || w / d >= 0.6
 }
@@ -74,7 +77,6 @@ function normalizeQuality(q) {
 function normalizeSourcesMap(sources) {
   const out = {}
   if (!sources || typeof sources !== 'object') return out
-
   for (const [k, v] of Object.entries(sources)) {
     if (!v) continue
     const q = normalizeQuality(k)
@@ -110,6 +112,36 @@ function readGestureAllowed() {
   }
 }
 
+function getMaxBufferedEnd(v) {
+  try {
+    const b = v?.buffered
+    if (!b || !b.length) return 0
+    let max = 0
+    for (let i = 0; i < b.length; i++) {
+      const end = b.end(i)
+      if (end > max) max = end
+    }
+    return max
+  } catch {
+    return 0
+  }
+}
+
+function isTimeBuffered(v, t, eps = 0.25) {
+  try {
+    const b = v?.buffered
+    if (!b || !b.length) return false
+    for (let i = 0; i < b.length; i++) {
+      const start = b.start(i)
+      const end = b.end(i)
+      if (t >= start - eps && t <= end + eps) return true
+    }
+    return false
+  } catch {
+    return false
+  }
+}
+
 export default function VideoPlayer({
   videoId,
   sources = {},
@@ -124,8 +156,12 @@ export default function VideoPlayer({
   onNext,
   onPrev,
   onWatched,
+  isMini = false,
+  onReturn,
+  onClose,
 }) {
   const dispatch = useDispatch()
+  const store = useStore()
 
   const videoRef = useRef(null)
   const rootRef = useRef(null)
@@ -147,7 +183,6 @@ export default function VideoPlayer({
   const [controlsVisible, setControlsVisible] = useState(false)
   const [qualityOpen, setQualityOpen] = useState(false)
   const [playAnim, setPlayAnim] = useState(false)
-
   const [loopEnabled, setLoopEnabled] = useState(false)
 
   const sentThisSessionRef = useRef(false)
@@ -158,13 +193,17 @@ export default function VideoPlayer({
   const lastVideoIdRef = useRef(null)
   const endedLockRef = useRef(false)
 
-  // Seeking lock (so root click doesn't toggle play while dragging)
   const isSeekingRef = useRef(false)
 
-  // autoplay-muted fallback flag (LOCAL ONLY, do NOT store in redux)
   const forcedMutedRef = useRef(false)
-  // UI mirror of forcedMutedRef (so slider/icon updates correctly after refresh)
   const [forcedMutedUi, setForcedMutedUi] = useState(false)
+
+  const wantedTimeRef = useRef(null)
+  const resumeAfterSeekRef = useRef(false)
+  const bufferingKickRef = useRef(null)
+
+  const lastSavedAtRef = useRef(0)
+  const lastSavedTimeRef = useRef(0)
 
   const effectiveMuted = muted || forcedMutedUi
 
@@ -174,13 +213,11 @@ export default function VideoPlayer({
     setForcedMutedUi(next)
   }, [])
 
-  // Hydration-safe flag: during SSR hydration render stable UI (prevents mismatch)
   const [hydrated, setHydrated] = useState(false)
   useEffect(() => {
     setHydrated(true)
   }, [])
 
-  // When user interacts once, treat it as “gesture happened”
   const markGesture = useCallback(() => {
     if (typeof window === 'undefined') return
     try {
@@ -188,7 +225,6 @@ export default function VideoPlayer({
     } catch {}
   }, [])
 
-  // fullscreen listener: keep store in sync (Esc / browser UI etc.)
   useEffect(() => {
     const onFs = () => {
       const isFs = Boolean(document.fullscreenElement)
@@ -250,7 +286,6 @@ export default function VideoPlayer({
   const activeSrc = useMemo(() => sourcesNorm?.[String(quality)] || '', [sourcesNorm, quality])
   const noSrc = !activeSrc
 
-  // Keep element volume/mute in sync with store + forcedMutedUi
   useEffect(() => {
     const v = videoRef.current
     if (!v) return
@@ -261,18 +296,15 @@ export default function VideoPlayer({
   const safeAutoplay = useCallback(async () => {
     const v = videoRef.current
     if (!v || !v.src) return false
-
-    // Only attempt autoplay if we already have a “gesture allowed” flag.
     if (!readGestureAllowed()) return false
 
     try {
       await v.play()
       return true
     } catch (e) {
-      // Refresh case: browser blocks sound autoplay → retry muted autoplay
       if (e?.name === 'NotAllowedError') {
         try {
-          setForcedMuted(true) // <- important: UI must reflect this
+          setForcedMuted(true)
           v.muted = true
           await v.play()
           return true
@@ -282,6 +314,31 @@ export default function VideoPlayer({
     return false
   }, [setForcedMuted])
 
+  const kickPlayback = useCallback(async () => {
+    const v = videoRef.current
+    if (!v || !v.src) return
+    if (v.paused && !resumeAfterSeekRef.current) return
+
+    try {
+      await v.play()
+      return
+    } catch {}
+
+    try {
+      const wanted = wantedTimeRef.current
+      const t = typeof wanted === 'number' ? wanted : v.currentTime
+
+      v.load()
+      setTimeout(() => {
+        try {
+          if (typeof t === 'number' && Number.isFinite(t)) v.currentTime = t
+          v.play().catch(() => {})
+        } catch {}
+      }, 50)
+    } catch {}
+  }, [])
+
+  // SRC CHANGE (restore time ONCE from store, without subscribing)
   useEffect(() => {
     const v = videoRef.current
     if (!v) return
@@ -299,6 +356,8 @@ export default function VideoPlayer({
       setCurrentTime(0)
       setBufferedEnd(0)
       setForcedMuted(false)
+      wantedTimeRef.current = null
+      resumeAfterSeekRef.current = false
       return
     }
 
@@ -309,7 +368,18 @@ export default function VideoPlayer({
     const wasPlaying = !v.paused
     const prevTime = v.currentTime || 0
 
-    const targetTime = isVideoChange ? 0 : prevTime
+    // read saved time one-shot
+    let resumeFrom = 0
+    try {
+      const state = store.getState()
+      const t = state?.player?.playbackTimeById?.[String(videoId)]
+      resumeFrom = Number(t) || 0
+    } catch {}
+
+    const targetTime = isVideoChange ? 0 : resumeFrom > 0.5 ? resumeFrom : prevTime
+
+    wantedTimeRef.current = null
+    resumeAfterSeekRef.current = false
 
     const gestureAllowed = readGestureAllowed()
     const shouldPlay =
@@ -333,19 +403,122 @@ export default function VideoPlayer({
       try {
         v.currentTime = clamp(targetTime, 0, Math.max(0, (v.duration || 0) - 0.2))
       } catch {}
+
       setIsReady(true)
       setIsBuffering(false)
 
-      if (shouldPlay) {
-        await safeAutoplay()
-      }
+      if (shouldPlay) await safeAutoplay()
     }
 
     v.addEventListener('loadedmetadata', onLoaded, { once: true })
     v.load()
 
     return () => v.removeEventListener('loadedmetadata', onLoaded)
-  }, [activeSrc, poster, videoId, safeAutoplay, setForcedMuted])
+  }, [activeSrc, poster, videoId, safeAutoplay, setForcedMuted, store])
+
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v) return
+
+    const clearKick = () => {
+      if (bufferingKickRef.current) {
+        clearTimeout(bufferingKickRef.current)
+        bufferingKickRef.current = null
+      }
+    }
+
+    const isRecoveringSeek = () => isSeekingRef.current || typeof wantedTimeRef.current === 'number'
+
+    const scheduleKick = () => {
+      clearKick()
+      bufferingKickRef.current = setTimeout(() => {
+        const stillBad = v.readyState < 3
+        if (stillBad) kickPlayback()
+      }, 2500)
+    }
+
+    const onSeeking = () => {
+      setIsBuffering(true)
+      scheduleKick()
+    }
+
+    const onSeeked = () => {
+      const wanted = wantedTimeRef.current
+      if (typeof wanted === 'number' && isTimeBuffered(v, wanted)) {
+        wantedTimeRef.current = null
+        setIsBuffering(false)
+        clearKick()
+        if (resumeAfterSeekRef.current) v.play().catch(() => {})
+        return
+      }
+      scheduleKick()
+    }
+
+    const onProgress = () => {
+      setBufferedEnd(getMaxBufferedEnd(v) || 0)
+      const wanted = wantedTimeRef.current
+      if (typeof wanted !== 'number') return
+      if (isTimeBuffered(v, wanted)) {
+        wantedTimeRef.current = null
+        setIsBuffering(false)
+        clearKick()
+        if (resumeAfterSeekRef.current) v.play().catch(() => {})
+      }
+    }
+
+    const onWaitingEv = () => {
+      setIsBuffering(true)
+      scheduleKick()
+    }
+
+    const onStalledEv = () => {
+      setIsBuffering(true)
+      scheduleKick()
+    }
+
+    const onCanPlay = () => {
+      setIsReady(true)
+      setIsBuffering(false)
+      clearKick()
+      if (resumeAfterSeekRef.current) v.play().catch(() => {})
+    }
+
+    const onPlaying = () => {
+      setIsReady(true)
+      setIsBuffering(false)
+      clearKick()
+    }
+
+    const onPauseEv = () => {
+      if (isRecoveringSeek()) {
+        scheduleKick()
+        return
+      }
+      resumeAfterSeekRef.current = false
+      clearKick()
+    }
+
+    v.addEventListener('seeking', onSeeking)
+    v.addEventListener('seeked', onSeeked)
+    v.addEventListener('progress', onProgress)
+    v.addEventListener('waiting', onWaitingEv)
+    v.addEventListener('stalled', onStalledEv)
+    v.addEventListener('canplay', onCanPlay)
+    v.addEventListener('playing', onPlaying)
+    v.addEventListener('pause', onPauseEv)
+
+    return () => {
+      clearKick()
+      v.removeEventListener('seeking', onSeeking)
+      v.removeEventListener('seeked', onSeeked)
+      v.removeEventListener('progress', onProgress)
+      v.removeEventListener('waiting', onWaitingEv)
+      v.removeEventListener('stalled', onStalledEv)
+      v.removeEventListener('canplay', onCanPlay)
+      v.removeEventListener('playing', onPlaying)
+      v.removeEventListener('pause', onPauseEv)
+    }
+  }, [kickPlayback])
 
   const showControls = useCallback(() => setControlsVisible(true), [])
   const hideControls = useCallback(() => {
@@ -375,13 +548,12 @@ export default function VideoPlayer({
     if (!forcedMutedRef.current) return
     setForcedMuted(false)
     const v = videoRef.current
-    if (v) v.muted = Boolean(muted) // restore to store state
+    if (v) v.muted = Boolean(muted)
   }, [muted, setForcedMuted])
 
   const togglePlay = useCallback(() => {
     const v = videoRef.current
     if (!v || !v.src) return
-
     markGesture()
     clearForcedMutedIfAny()
 
@@ -402,13 +574,19 @@ export default function VideoPlayer({
 
     const t = v.currentTime || 0
     setCurrentTime(t)
+    setBufferedEnd(getMaxBufferedEnd(v) || 0)
 
-    try {
-      if (v.buffered && v.buffered.length) {
-        const end = v.buffered.end(v.buffered.length - 1)
-        setBufferedEnd(end || 0)
+    if (videoId) {
+      const now = Date.now()
+      const dt = now - (lastSavedAtRef.current || 0)
+      const prevSaved = lastSavedTimeRef.current || 0
+
+      if (dt >= 1200 || Math.abs(t - prevSaved) >= 2.0) {
+        lastSavedAtRef.current = now
+        lastSavedTimeRef.current = t
+        dispatch(setPlaybackTime({ videoId, time: t }))
       }
-    } catch {}
+    }
 
     if (t <= REWATCH_RESET_NEAR_START_SEC && !v.paused && watchedSecondsRef.current > 0) {
       resetWatchSession()
@@ -431,7 +609,30 @@ export default function VideoPlayer({
 
     lastTimeRef.current = t
     lastTickAtRef.current = now
-  }, [trySendView, resetWatchSession])
+  }, [trySendView, resetWatchSession, dispatch, videoId])
+
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v || !videoId) return
+
+    const flush = () => {
+      try {
+        dispatch(setPlaybackTime({ videoId, time: v.currentTime || 0 }))
+      } catch {}
+    }
+
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') flush()
+    }
+
+    v.addEventListener('pause', flush)
+    document.addEventListener('visibilitychange', onVis)
+
+    return () => {
+      v.removeEventListener('pause', flush)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [dispatch, videoId])
 
   const onLoadedMeta = useCallback(() => {
     const v = videoRef.current
@@ -449,9 +650,7 @@ export default function VideoPlayer({
   const onEndedEv = useCallback(() => {
     if (endedLockRef.current) return
     endedLockRef.current = true
-    setTimeout(() => {
-      endedLockRef.current = false
-    }, 450)
+    setTimeout(() => (endedLockRef.current = false), 450)
 
     setIsPlaying(false)
 
@@ -482,11 +681,26 @@ export default function VideoPlayer({
 
       const rect = bar.getBoundingClientRect()
       const p = clamp((clientX - rect.left) / rect.width, 0, 1)
-      v.currentTime = p * duration
-      lastTimeRef.current = v.currentTime || 0
+      const nextTime = p * duration
+
+      resumeAfterSeekRef.current = !v.paused
+      wantedTimeRef.current = nextTime
+      setIsBuffering(true)
+
+      try {
+        v.currentTime = nextTime
+      } catch {}
+
+      if (videoId) {
+        dispatch(setPlaybackTime({ videoId, time: nextTime }))
+        lastSavedAtRef.current = Date.now()
+        lastSavedTimeRef.current = nextTime
+      }
+
+      lastTimeRef.current = nextTime
       lastTickAtRef.current = Date.now()
     },
-    [duration, markGesture, clearForcedMutedIfAny]
+    [duration, markGesture, clearForcedMutedIfAny, dispatch, videoId]
   )
 
   const onProgressPointerDown = useCallback(
@@ -518,8 +732,6 @@ export default function VideoPlayer({
   const toggleMute = useCallback(() => {
     markGesture()
 
-    // If browser forced-muted due to autoplay policy:
-    // treat click as "Unmute" (don’t toggle into mute)
     if (forcedMutedRef.current) {
       setForcedMuted(false)
       dispatch(setMuted(false))
@@ -535,7 +747,6 @@ export default function VideoPlayer({
     (e) => {
       markGesture()
       clearForcedMutedIfAny()
-
       const v = Number(e.target.value)
       if (v > 0 && muted) dispatch(setMuted(false))
       dispatch(setVolumeLevel(v))
@@ -581,12 +792,10 @@ export default function VideoPlayer({
       onMouseLeave={hideControls}
       onClick={(e) => {
         if (isSeekingRef.current) return
-
         const interactive = e.target.closest?.(
           'button, input, a, textarea, select, label, [role="slider"], .video-player__progress-hit, .video-player__quality-menu'
         )
         if (interactive) return
-
         togglePlay()
       }}
     >
@@ -604,6 +813,36 @@ export default function VideoPlayer({
           onPlaying={onPlayingEv}
           onEnded={onEndedEv}
         />
+
+        {isMini ? (
+          <div className="video-player__mini-actions" aria-hidden={false}>
+            <button
+              className="video-player__mini-btn"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onReturn?.()
+              }}
+              aria-label="Return to Watch"
+              title="Return to Watch"
+            >
+              <HiArrowLeft />
+            </button>
+
+            <button
+              className="video-player__mini-btn"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onClose?.()
+              }}
+              aria-label="Close player"
+              title="Close"
+            >
+              <HiX />
+            </button>
+          </div>
+        ) : null}
 
         <div
           className={clsx('video-player__loading-overlay', {
@@ -723,9 +962,11 @@ export default function VideoPlayer({
                 />
               </div>
 
-              <div className="video-player__time">
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </div>
+              {!isMini && (
+                <div className="video-player__time">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </div>
+              )}
             </div>
 
             <div className="video-player__right-controls">

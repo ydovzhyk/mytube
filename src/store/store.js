@@ -45,6 +45,8 @@ const createPersistedPlayerReducer = () => {
       'muted',
       'preferredQuality',
       'backPrevAllowed',
+      'currentVideoId',
+      'playback',
     ],
   }
 

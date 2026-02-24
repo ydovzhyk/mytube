@@ -13,6 +13,7 @@ import {
 } from '@/lib/api/videos'
 import { axiosCreatePlaylist } from '@/lib/api/playlists'
 import { setUploadProgress } from './videos-slice'
+import { setPlaybackSnapshot } from '@/store/player/player-slice'
 
 const toReject = (error, rejectWithValue) => {
   const status = error?.response?.status || 0
@@ -87,9 +88,19 @@ export const videoView = createAsyncThunk(
 
 export const getWatchVideo = createAsyncThunk(
   'videos/get-watch-video',
-  async (params, { rejectWithValue }) => {
+  async (params, { rejectWithValue, dispatch }) => {
     try {
       const data = await axiosGetWatchVideo(params)
+
+      dispatch(
+        setPlaybackSnapshot({
+          currentVideo: data?.currentVideo || null,
+          playlist: data?.playlist || null,
+          similarItems: Array.isArray(data?.similarVideos) ? data.similarVideos : [],
+          listId: params?.list || null,
+        })
+      )
+      
       return data
     } catch (e) {
       return toReject(e, rejectWithValue)

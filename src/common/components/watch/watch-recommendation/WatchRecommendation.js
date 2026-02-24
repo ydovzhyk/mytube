@@ -4,7 +4,6 @@ import { useCallback, useMemo } from 'react'
 import clsx from 'clsx'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTranslate } from '@/utils/translating/translating'
-
 import { getSimilarVideos } from '@/store/videos/videos-operations'
 import {
   getVideosLoading,
@@ -14,10 +13,8 @@ import {
   getWatchSimilarFilter,
 } from '@/store/videos/videos-selectors'
 import { setWatchSimilarFilter } from '@/store/videos/videos-slice'
-
 import { getLogin } from '@/store/auth/auth-selectors'
 import { getVisitorId } from '@/store/visitor/visitor-selectors'
-
 import Button from '@/common/shared/button/Button'
 import MiniVideoCard from '@/common/shared/mini-video-card/MiniVideoCard'
 import T from '@/common/shared/i18n/T'
@@ -52,7 +49,6 @@ export default function WatchRecommendation({ videoId, currentId, onSelectVideo 
 
   const buildVisitorIdParam = useCallback(
     (f) => {
-      // тільки для watched, і тільки для гостя
       if (f !== 'watched') return undefined
       if (loggedIn) return undefined
       return visitorId || undefined
@@ -93,7 +89,6 @@ export default function WatchRecommendation({ videoId, currentId, onSelectVideo 
     )
   }, [dispatch, videoId, hasMore, loading, nextCursor, filter, buildVisitorIdParam])
 
-  // (опційно) заблокувати watched для гостя, поки visitorId ще не готовий
   const watchedDisabled = !loggedIn && !visitorId
 
   return (

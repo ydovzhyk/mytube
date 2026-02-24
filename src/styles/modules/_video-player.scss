@@ -26,6 +26,7 @@
     height: 100%;
     object-fit: contain;
     cursor: pointer;
+    background: #000;
   }
 
   &__loading-overlay {
@@ -144,17 +145,28 @@
   // Control buttons row
   &__buttons {
     @include flex-between;
+    align-items: center;
   }
 
   &__left-controls,
   &__right-controls {
     @include flex-start;
     gap: $spacing-2;
+    align-items: center;
   }
 
   &__btn {
     @include button-ghost;
-    padding: $spacing-2;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    line-height: 1;
+
     border-radius: $radius-md;
     font-size: $text-xl;
     color: $text-primary;
@@ -164,7 +176,14 @@
     }
 
     svg {
+      display: block;
       color: inherit;
+    }
+
+    img {
+      display: block;
+      width: 16px;
+      height: 16px;
     }
 
     &--active {
@@ -181,6 +200,7 @@
   &__volume {
     @include flex-start;
     gap: $spacing-1;
+    align-items: center;
 
     &-slider {
       width: 0;
@@ -232,6 +252,7 @@
     color: $text-primary;
     font-variant-numeric: tabular-nums;
     padding: 0 $spacing-2;
+    white-space: nowrap;
   }
 
   // Quality selector
@@ -272,6 +293,47 @@
       color: $primary;
     }
   }
+
+  &__mini-actions {
+    position: absolute;
+    top: $spacing-2;
+    left: $spacing-2;
+    right: $spacing-2;
+    z-index: 12;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  &__mini-btn {
+    pointer-events: auto;
+    @include button-ghost;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    line-height: 1;
+
+    border-radius: $radius-md;
+    color: $text-primary;
+    background: rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(6px);
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    svg {
+      display: block;
+      width: 16px;
+      height: 16px;
+      color: inherit;
+    }
+  }
 }
 
 @keyframes playPulse {
@@ -289,5 +351,355 @@
   }
 }
 
+// @use '../variables' as *;
+// @use '../mixins' as *;
 
+// .video-player {
+//   position: relative;
+//   width: 100%;
+//   background: #000;
+//   border-radius: $radius-lg;
+//   overflow: hidden;
 
+//   &--fullscreen {
+//     border-radius: 0;
+//   }
+
+//   &__video-wrapper {
+//     position: relative;
+//     width: 100%;
+//     @include aspect-video;
+//   }
+
+//   &__video {
+//     position: absolute;
+//     top: 0;
+//     left: 0;
+//     width: 100%;
+//     height: 100%;
+//     object-fit: contain;
+//     cursor: pointer;
+//   }
+
+//   &__loading-overlay {
+//     position: absolute;
+//     inset: 0;
+//     background: #000;
+//     z-index: 10;
+//     opacity: 1;
+//     transition: opacity 0.2s ease-out;
+
+//     &--hidden {
+//       opacity: 0;
+//       pointer-events: none;
+//     }
+//   }
+
+//   // Play/Pause animation overlay
+//   &__play-animation {
+//     position: absolute;
+//     top: 50%;
+//     left: 50%;
+//     transform: translate(-50%, -50%) scale(0);
+//     width: 80px;
+//     height: 80px;
+//     background: rgba(0, 0, 0, 0.6);
+//     border-radius: $radius-full;
+//     @include flex-center;
+//     font-size: $text-3xl;
+//     color: $text-primary;
+//     pointer-events: none;
+//     opacity: 0;
+
+//     &--animate {
+//       animation: playPulse 0.4s ease-out forwards;
+//     }
+//   }
+
+//   // Controls
+//   &__controls {
+//     position: absolute;
+//     bottom: 0;
+//     left: 0;
+//     right: 0;
+//     background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+//     padding: $spacing-4;
+//     opacity: 0;
+//     visibility: hidden;
+//     transition: all $transition-fast;
+//   }
+
+//   &:hover &__controls,
+//   &--controls-visible &__controls {
+//     opacity: 1;
+//     visibility: visible;
+//   }
+
+//   // BIG HIT AREA for seeking (spacing only here)
+//   &__progress-hit {
+//     padding-top: 11px;
+//     width: 100%;
+//     height: 28px;
+//     display: flex;
+//     align-items: center;
+//     cursor: pointer;
+//     touch-action: none;
+//   }
+
+//   // The visual bar (NO margin-bottom here)
+//   &__progress {
+//     width: 100%;
+//     height: 4px;
+//     background: rgba(255, 255, 255, 0.3);
+//     border-radius: $radius-full;
+//     position: relative;
+//     transition: height $transition-fast;
+//   }
+
+//   &__progress-hit:hover &__progress {
+//     height: 6px;
+//   }
+
+//   &__progress-filled {
+//     height: 100%;
+//     background: $primary;
+//     border-radius: $radius-full;
+//     position: relative;
+//     transition: width 0.1s linear;
+//   }
+
+//   &__progress-thumb {
+//     position: absolute;
+//     right: -6px;
+//     top: 50%;
+//     transform: translateY(-50%) scale(0);
+//     width: 12px;
+//     height: 12px;
+//     background: $primary;
+//     border-radius: $radius-full;
+//     transition: transform $transition-fast;
+//   }
+
+//   &__progress-hit:hover &__progress-thumb {
+//     transform: translateY(-50%) scale(1);
+//   }
+
+//   &__progress-buffer {
+//     position: absolute;
+//     top: 0;
+//     left: 0;
+//     height: 100%;
+//     background: rgba(255, 255, 255, 0.2);
+//     border-radius: $radius-full;
+//     pointer-events: none;
+//   }
+
+//   // Control buttons row
+//   &__buttons {
+//     @include flex-between;
+//     align-items: center; // FIX: consistent vertical alignment
+//   }
+
+//   &__left-controls,
+//   &__right-controls {
+//     @include flex-start;
+//     gap: $spacing-2;
+//     align-items: center; // FIX: consistent vertical alignment
+//   }
+
+//   &__btn {
+//     @include button-ghost;
+
+//     // FIX: make buttons identical (img vs svg baseline issues)
+//     display: inline-flex;
+//     align-items: center;
+//     justify-content: center;
+
+//     width: 36px;
+//     height: 36px;
+//     padding: 0;
+//     line-height: 1;
+
+//     border-radius: $radius-md;
+//     font-size: $text-xl;
+//     color: $text-primary;
+
+//     &:hover {
+//       background: rgba(255, 255, 255, 0.1);
+//     }
+
+//     svg {
+//       display: block;
+//       color: inherit;
+//     }
+
+//     img {
+//       display: block;
+//       width: 16px;
+//       height: 16px;
+//     }
+
+//     &--active {
+//       background: rgba(255, 255, 255, 0.14);
+//       color: $primary;
+
+//       svg {
+//         color: $primary;
+//       }
+//     }
+//   }
+
+//   // Volume
+//   &__volume {
+//     @include flex-start;
+//     gap: $spacing-1;
+//     align-items: center;
+
+//     &-slider {
+//       width: 0;
+//       opacity: 0;
+//       transition: all $transition-fast;
+//     }
+
+//     &:hover &-slider {
+//       width: 80px;
+//       opacity: 1;
+//     }
+//   }
+
+//   &__slider {
+//     -webkit-appearance: none;
+//     appearance: none;
+//     height: 4px;
+//     border-radius: $radius-full;
+//     cursor: pointer;
+
+//     &::-webkit-slider-thumb {
+//       -webkit-appearance: none;
+//       appearance: none;
+//       width: 12px;
+//       height: 12px;
+//       background: $text-primary;
+//       border-radius: $radius-full;
+//       cursor: pointer;
+//     }
+
+//     &::-moz-range-thumb {
+//       width: 12px;
+//       height: 12px;
+//       background: $text-primary;
+//       border-radius: $radius-full;
+//       border: none;
+//       cursor: pointer;
+//     }
+
+//     &::-moz-range-track {
+//       height: 4px;
+//       border-radius: $radius-full;
+//     }
+//   }
+
+//   // Time display
+//   &__time {
+//     font-size: $text-sm;
+//     color: $text-primary;
+//     font-variant-numeric: tabular-nums;
+//     padding: 0 $spacing-2;
+//     white-space: nowrap; // FIX: prevent wrapping in mini
+//   }
+
+//   // Quality selector
+//   &__quality {
+//     position: relative;
+//   }
+
+//   &__quality-menu {
+//     position: absolute;
+//     bottom: 100%;
+//     right: 0;
+//     background: $bg-elevated;
+//     border: 1px solid $border-default;
+//     border-radius: $radius-lg;
+//     padding: $spacing-2;
+//     margin-bottom: $spacing-2;
+//     min-width: 120px;
+//     opacity: 0;
+//     visibility: hidden;
+//     transform: translateY(10px);
+//     transition: all $transition-fast;
+
+//     &--open {
+//       opacity: 1;
+//       visibility: visible;
+//       transform: translateY(0);
+//     }
+//   }
+
+//   &__quality-option {
+//     @include button-ghost;
+//     width: 100%;
+//     padding: $spacing-2 $spacing-3;
+//     font-size: $text-sm;
+//     justify-content: space-between;
+
+//     &--active {
+//       color: $primary;
+//     }
+//   }
+
+//   &__mini-actions {
+//     position: absolute;
+//     top: $spacing-2;
+//     left: $spacing-2;
+//     right: $spacing-2;
+//     z-index: 12;
+//     display: flex;
+//     justify-content: space-between;
+//     pointer-events: none;
+//   }
+
+//   &__mini-btn {
+//     pointer-events: auto;
+//     @include button-ghost;
+
+//     display: inline-flex;
+//     align-items: center;
+//     justify-content: center;
+
+//     width: 36px;
+//     height: 36px;
+//     padding: 0;
+//     line-height: 1;
+
+//     border-radius: $radius-md;
+//     color: $text-primary;
+//     background: rgba(0, 0, 0, 0.05);
+//     backdrop-filter: blur(6px);
+
+//     &:hover {
+//       background: rgba(0, 0, 0, 0.5);
+//     }
+
+//     svg {
+//       display: block;
+//       width: 16px;
+//       height: 16px;
+//       color: inherit;
+//     }
+//   }
+// }
+
+// @keyframes playPulse {
+//   0% {
+//     transform: translate(-50%, -50%) scale(0);
+//     opacity: 0;
+//   }
+//   50% {
+//     transform: translate(-50%, -50%) scale(1);
+//     opacity: 1;
+//   }
+//   100% {
+//     transform: translate(-50%, -50%) scale(1.3);
+//     opacity: 0;
+//   }
+// }

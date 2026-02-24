@@ -3,7 +3,6 @@
 import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'next/navigation'
-
 import { getWatchVideo } from '@/store/videos/videos-operations'
 import { resetWatch, setWatchCurrentVideo } from '@/store/videos/videos-slice'
 import { getWatchPlaylist } from '@/store/videos/videos-selectors'

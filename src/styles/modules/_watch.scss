@@ -624,3 +624,12 @@
     }
   }
 }
+
+.watch-player-slot {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  background: #000;
+}
