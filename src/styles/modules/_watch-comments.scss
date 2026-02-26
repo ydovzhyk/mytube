@@ -1,0 +1,452 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.watch-comments {
+  margin-top: $spacing-0;
+  padding: $spacing-4;
+  border-radius: $radius-lg;
+  border: 1px solid $border-default;
+  background: $bg-secondary;
+
+  &__topRow {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: $spacing-3;
+    margin-bottom: $spacing-4;
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    font-size: $text-lg;
+    font-weight: $font-semibold;
+  }
+
+  &__sort {
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+  }
+
+  &__sortLabel {
+    font-size: $text-sm;
+    color: $text-secondary;
+  }
+
+  &__sortBtn {
+    @include button-ghost;
+    padding: 6px 10px;
+    border-radius: $radius-full;
+    border: 1px solid $border-default;
+    background: $bg-tertiary;
+    font-size: $text-sm;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  /* composer */
+  &__composer {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: $spacing-3;
+    align-items: start;
+    margin-bottom: $spacing-4;
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+  }
+
+  &__composerMain {
+    min-width: 0;
+    display: grid;
+    gap: $spacing-0;
+  }
+
+  &__composerActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-2;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  &__pinCreate {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: auto;
+    user-select: none;
+
+    input {
+      width: 16px;
+      height: 16px;
+      accent-color: $primary;
+      cursor: pointer;
+    }
+
+    span {
+      font-size: $text-sm;
+      color: $text-secondary;
+    }
+
+    &:hover span {
+      color: $text-primary;
+    }
+
+    input:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    input:disabled + span {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  /* list */
+  &__list {
+    display: grid;
+    gap: $spacing-4;
+  }
+
+  &__empty {
+    padding: $spacing-4;
+    text-align: center;
+    color: $text-secondary;
+    border-radius: $radius-md;
+    background: $bg-tertiary;
+    border: 1px solid $border-default;
+  }
+}
+
+/* Thread wrapper */
+.comment-thread {
+  display: grid;
+  gap: $spacing-2;
+
+  &__toggle {
+    @include button-ghost;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: $radius-full;
+    color: $text-secondary;
+    width: fit-content;
+
+    svg {
+      font-size: 18px;
+    }
+
+    &:hover {
+      color: $text-primary;
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__replies {
+    margin-left: 42px; /* align under text after avatar */
+    padding-left: 14px;
+    border-left: 2px solid rgba(255, 255, 255, 0.08);
+    display: grid;
+    gap: $spacing-3;
+  }
+}
+
+.comment {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: $spacing-3;
+  align-items: start;
+
+  &--pinned {
+    .comment__main {
+      position: relative;
+    }
+  }
+
+  /* reply row is tighter */
+  &--reply {
+    grid-template-columns: 34px 1fr;
+
+    .comment__actions {
+      margin-top: 0;
+    }
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+  }
+
+  &__main {
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: baseline;
+    gap: $spacing-2;
+    flex-wrap: wrap;
+  }
+
+  &__name {
+    font-weight: $font-semibold;
+    font-size: $text-sm;
+  }
+
+  &__handle {
+    color: $text-secondary;
+    font-size: $text-xs;
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: $radius-full;
+    font-size: $text-xs;
+    color: $text-secondary;
+    border: 1px solid $border-default;
+    background: $bg-tertiary;
+  }
+
+  &__badge--pinned {
+    color: $text-primary;
+    border-color: $border-hover;
+    background: $bg-hover;
+  }
+
+  &__replyPreview {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 10px;
+    align-items: start;
+    text-align: left;
+
+    padding: 10px;
+    border-radius: $radius-md;
+    border: 1px solid $border-default;
+    background: $bg-tertiary;
+
+    &:hover {
+      border-color: $border-hover;
+      background: $bg-hover;
+    }
+  }
+
+  &__replyAvatar {
+    flex-shrink: 0;
+  }
+
+  &__replyText {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
+
+  &__replyName {
+    font-size: $text-xs;
+    font-weight: $font-semibold;
+    color: $text-primary;
+    @include text-ellipsis;
+  }
+
+  &__replyShort {
+    font-size: $text-xs;
+    color: $text-secondary;
+    @include text-ellipsis;
+  }
+
+  &__body {
+    font-size: $text-sm;
+    color: $text-primary;
+    white-space: pre-wrap;
+    word-break: break-word;
+
+    &--deleted {
+      color: $text-secondary;
+      font-style: italic;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+
+  &__iconBtn {
+    @include button-ghost;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: $radius-full;
+    color: $text-secondary;
+
+    svg {
+      font-size: 18px;
+    }
+
+    &:hover:not(:disabled) {
+      color: $text-primary;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  &__replyBtn {
+    @include button-ghost;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: $radius-full;
+    color: $text-secondary;
+
+    &:hover:not(:disabled) {
+      color: $text-primary;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  &__pinBtn {
+    @include button-ghost;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: $radius-full;
+    color: $text-secondary;
+
+    &:hover:not(:disabled) {
+      color: $text-primary;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* Modal */
+.comment-modal {
+  position: fixed;
+  inset: 0;
+  z-index: $z-modal;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background: $surface-overlay;
+  }
+
+  &__card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(640px, calc(100vw - 24px));
+    transform: translate(-50%, -50%);
+    background: $bg-elevated;
+    border: 1px solid $border-default;
+    border-radius: $radius-xl;
+    box-shadow: $shadow-xl;
+    padding: $spacing-4;
+    display: grid;
+    gap: $spacing-3;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-3;
+  }
+
+  &__title {
+    font-size: $text-lg;
+    font-weight: $font-semibold;
+  }
+
+  &__close {
+    @include button-ghost;
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-full;
+    font-size: 24px;
+    color: $text-secondary;
+
+    &:hover {
+      color: $text-primary;
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__preview {
+    border: 1px solid $border-default;
+    background: $bg-tertiary;
+    border-radius: $radius-md;
+    padding: $spacing-3;
+  }
+
+  &__previewTop {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+
+  &__previewAvatar {
+    flex-shrink: 0;
+  }
+
+  &__previewMeta {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+  }
+
+  &__previewName {
+    font-weight: $font-semibold;
+    font-size: $text-sm;
+    @include text-ellipsis;
+  }
+
+  &__previewShort {
+    color: $text-secondary;
+    font-size: $text-sm;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  &__form {
+    display: grid;
+    gap: $spacing-2;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-2;
+  }
+}

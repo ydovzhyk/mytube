@@ -14,6 +14,7 @@ import { setShowPlaylist } from '@/store/videos/videos-slice'
 import WatchPlaylistPanel from '@/common/components/watch/watch-playlist/WatchPlaylistPanel'
 import WatchRecommendation from '@/common/components/watch/watch-recommendation/WatchRecommendation'
 import WatchVideoPanel from '@/common/components/watch/watch-video-panel/WatchVideoPanel'
+import WatchCommentsSection from '@/common/components/watch/watch-comments/WatchCommentsSection'
 import T from '@/common/shared/i18n/T'
 import { IoCloseOutline } from 'react-icons/io5'
 
@@ -164,6 +165,7 @@ export default function WatchShell({ children }) {
           <>
             <WatchVideoPanel video={currentVideo} videoId={activeId} />
             <VideoDescriptionPanel key={String(activeId || '')} video={currentVideo} />
+            <WatchCommentsSection video={currentVideo} />
           </>
         )}
       </div>
