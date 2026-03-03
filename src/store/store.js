@@ -17,6 +17,7 @@ import videosReducer from './videos/videos-slice'
 import playlistsReducer from './playlists/playlists-slice'
 import visitorReducer from './visitor/visitor-slice'
 import playerReducer from './player/player-slice'
+import commentsReducer from './comments/comments-slice'
 import { setupInterceptors } from '../lib/api/auth'
 // import logger from 'redux-logger'
 
@@ -65,6 +66,7 @@ export const store = configureStore({
     videos: videosReducer,
     playlists: playlistsReducer,
     visitor: visitorReducer,
+    comments: commentsReducer,
   },
   middleware: (getDefaultMiddleware) => {
     const middlewares = getDefaultMiddleware({

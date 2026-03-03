@@ -4,13 +4,15 @@ import {
   getCommentsByVideoId,
   editComment,
   deleteComment,
+  reactComment,
 } from './comments-operations'
 
 const initialState = {
   error: null,
   message: null,
-  commentsByVideoId: {}, // { [videoId]: Comment[] }
-  activeVideoId: null,
+
+  // videoId -> { items: [], cursor: '', hasMore: true, loading: false }
+  byVideoId: {},
 }
 
 const errMsg = (payload) =>
@@ -22,10 +24,33 @@ function toId(v) {
   return s ? s : ''
 }
 
+function ensureBucket(state, videoId) {
+  const id = toId(videoId)
+  if (!id) return null
+  if (!state.byVideoId[id]) {
+    state.byVideoId[id] = { items: [], cursor: '', hasMore: true, loading: false }
+  }
+  return state.byVideoId[id]
+}
+
+function dedupMerge(prev = [], next = []) {
+  const map = new Map()
+  for (const c of prev) {
+    const id = toId(c?._id)
+    if (id) map.set(id, c)
+  }
+  for (const c of next) {
+    const id = toId(c?._id)
+    if (!id) continue
+    const old = map.get(id)
+    map.set(id, old ? { ...old, ...c } : c)
+  }
+  return Array.from(map.values())
+}
+
 function upsertById(list, doc) {
   const id = toId(doc?._id)
   if (!id) return list
-
   const idx = list.findIndex((x) => toId(x?._id) === id)
   if (idx === -1) return [doc, ...list]
   const next = [...list]
@@ -47,12 +72,11 @@ const commentsSlice = createSlice({
     resetCommentsForVideo(state, { payload }) {
       const videoId = toId(payload)
       if (!videoId) return
-      delete state.commentsByVideoId[videoId]
-      if (state.activeVideoId === videoId) state.activeVideoId = null
+      delete state.byVideoId[videoId]
     },
+
     clearComments(state) {
-      state.commentsByVideoId = {}
-      state.activeVideoId = null
+      state.byVideoId = {}
       state.error = null
       state.message = null
     },
@@ -60,89 +84,148 @@ const commentsSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      // * GET COMMENTS BY VIDEO
+
+      // ======================
+      // GET COMMENTS
+      // ======================
       .addCase(getCommentsByVideoId.pending, (state, { meta }) => {
         state.error = null
         state.message = null
-        const videoId = toId(meta?.arg)
-        state.activeVideoId = videoId || null
-      })
-      .addCase(getCommentsByVideoId.fulfilled, (state, { payload }) => {
-        const videoId = toId(payload?.videoId) || toId(state.activeVideoId)
-        const comments = Array.isArray(payload?.comments) ? payload.comments : []
 
-        if (!videoId) return
-        state.commentsByVideoId[videoId] = comments
+        const videoId = toId(meta?.arg?.videoId)
+        const bucket = ensureBucket(state, videoId)
+        if (bucket) bucket.loading = true
       })
-      .addCase(getCommentsByVideoId.rejected, (state, { payload }) => {
+
+      .addCase(getCommentsByVideoId.fulfilled, (state, { payload }) => {
+        const videoId = toId(payload?.videoId)
+        const bucket = ensureBucket(state, videoId)
+        if (!bucket) return
+
+        const items = Array.isArray(payload?.items) ? payload.items : []
+        const reset = Boolean(payload?.reset)
+
+        bucket.items = reset ? items : dedupMerge(bucket.items, items)
+        bucket.cursor = String(payload?.nextCursor || '')
+        bucket.hasMore = Boolean(payload?.hasMore)
+        bucket.loading = false
+      })
+
+      .addCase(getCommentsByVideoId.rejected, (state, { payload, meta }) => {
         state.error = errMsg(payload)
+
+        const videoId = toId(meta?.arg?.videoId)
+        const bucket = ensureBucket(state, videoId)
+        if (bucket) {
+          bucket.loading = false
+        }
       })
-      // * CREATE COMMENT
+
+      // ======================
+      // CREATE COMMENT
+      // ======================
       .addCase(createComment.pending, (state) => {
         state.error = null
         state.message = null
       })
+
       .addCase(createComment.fulfilled, (state, { payload }) => {
         const videoId = toId(payload?.videoId)
         const comment = payload?.comment
 
         state.message = okMsg(payload, 'Comment created')
 
-        if (!videoId || !comment) return
-        const prev = Array.isArray(state.commentsByVideoId[videoId])
-          ? state.commentsByVideoId[videoId]
-          : []
-        state.commentsByVideoId[videoId] = [comment, ...prev]
+        const bucket = ensureBucket(state, videoId)
+        if (!bucket || !comment) return
+
+        bucket.items = upsertById(bucket.items, comment)
       })
+
       .addCase(createComment.rejected, (state, { payload }) => {
         state.error = errMsg(payload)
       })
-      // * EDIT COMMENT
+
+      // ======================
+      // EDIT COMMENT
+      // ======================
       .addCase(editComment.pending, (state) => {
         state.error = null
         state.message = null
       })
+
       .addCase(editComment.fulfilled, (state, { payload }) => {
         const videoId = toId(payload?.videoId)
         const comment = payload?.comment
 
         state.message = okMsg(payload, 'Comment edited')
 
-        if (!videoId || !comment) return
-        const prev = Array.isArray(state.commentsByVideoId[videoId])
-          ? state.commentsByVideoId[videoId]
-          : []
-        state.commentsByVideoId[videoId] = upsertById(prev, comment)
+        const bucket = ensureBucket(state, videoId)
+        if (!bucket || !comment) return
+
+        bucket.items = upsertById(bucket.items, comment)
       })
+
       .addCase(editComment.rejected, (state, { payload }) => {
         state.error = errMsg(payload)
       })
-      // * DELETE COMMENT (soft in UI)
+
+      // ======================
+      // DELETE COMMENT
+      // ======================
       .addCase(deleteComment.pending, (state) => {
         state.error = null
         state.message = null
       })
+
       .addCase(deleteComment.fulfilled, (state, { payload }) => {
         const videoId = toId(payload?.videoId)
         const id = toId(payload?.id)
 
         state.message = okMsg(payload, 'Comment deleted')
 
-        if (!videoId || !id) return
-        const prev = Array.isArray(state.commentsByVideoId[videoId])
-          ? state.commentsByVideoId[videoId]
-          : []
-        state.commentsByVideoId[videoId] = prev.map((c) => {
+        const bucket = ensureBucket(state, videoId)
+        if (!bucket || !id) return
+
+        bucket.items = bucket.items.map((c) => {
           if (toId(c?._id) !== id) return c
           return {
             ...c,
             isDeleted: true,
             deletedAt: new Date().toISOString(),
-            text: c?.text || c?.content || '',
           }
         })
       })
+
       .addCase(deleteComment.rejected, (state, { payload }) => {
+        state.error = errMsg(payload)
+      })
+
+      // ======================
+      // REACT COMMENT
+      // ======================
+      .addCase(reactComment.pending, (state) => {
+        state.error = null
+        state.message = null
+      })
+
+      .addCase(reactComment.fulfilled, (state, { payload }) => {
+        const videoId = toId(payload?.videoId)
+        const commentId = toId(payload?.commentId)
+
+        const bucket = ensureBucket(state, videoId)
+        if (!bucket || !commentId) return
+
+        bucket.items = bucket.items.map((c) => {
+          if (toId(c?._id) !== commentId) return c
+          return {
+            ...c,
+            likesCount: Number(payload?.likesCount ?? c?.likesCount ?? 0),
+            dislikesCount: Number(payload?.dislikesCount ?? c?.dislikesCount ?? 0),
+          }
+        })
+      })
+
+      .addCase(reactComment.rejected, (state, { payload }) => {
         state.error = errMsg(payload)
       })
   },

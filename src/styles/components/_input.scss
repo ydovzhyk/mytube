@@ -137,3 +137,9 @@
   }
 }
 
+.textarea--compact {
+  min-height: unset;
+  height: auto;
+  resize: vertical;
+}
+

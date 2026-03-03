@@ -207,6 +207,18 @@
     font-size: $text-xs;
   }
 
+  /* NEW: clickable handle under/near name */
+  &__handleLink {
+    color: $text-secondary;
+    font-size: $text-xs;
+    text-decoration: none;
+
+    &:hover {
+      color: $text-primary;
+      text-decoration: underline;
+    }
+  }
+
   &__badge {
     display: inline-flex;
     align-items: center;
@@ -279,6 +291,17 @@
     }
   }
 
+  /* NEW: linkified URLs */
+  &__link {
+    color: $primary;
+    text-decoration: underline;
+    word-break: break-word;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
   &__actions {
     display: flex;
     align-items: center;
@@ -310,9 +333,40 @@
       opacity: 0.55;
       cursor: not-allowed;
     }
+
+    /* ✅ ACTIVE STATE (added, nothing removed) */
+    &.is-active {
+      color: $text-primary;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid $border-hover;
+    }
+
+    &.is-active svg {
+      color: $primary;
+    }
   }
 
   &__replyBtn {
+    @include button-ghost;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: $radius-full;
+    color: $text-secondary;
+
+    &:hover:not(:disabled) {
+      color: $text-primary;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  /* NEW: edit/delete buttons */
+  &__editBtn,
+  &__deleteBtn {
     @include button-ghost;
     height: 32px;
     padding: 0 12px;
@@ -430,6 +484,13 @@
     font-weight: $font-semibold;
     font-size: $text-sm;
     @include text-ellipsis;
+  }
+
+  /* NEW: handle in preview */
+  &__previewHandle {
+    color: $text-secondary;
+    font-size: $text-xs;
+    font-weight: $font-normal;
   }
 
   &__previewShort {

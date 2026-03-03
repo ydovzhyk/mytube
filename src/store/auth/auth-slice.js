@@ -38,6 +38,10 @@ const auth = createSlice({
     clearAuthMessage: (state) => {
       state.message = null
     },
+    setCommentReactions(state, { payload }) {
+      const base = state.user && typeof state.user === 'object' ? state.user : {}
+      state.user = { ...base, commentReactions: Array.isArray(payload) ? payload : [] }
+    },
   },
 
   extraReducers: (builder) => {
@@ -169,4 +173,4 @@ const auth = createSlice({
 
 export default auth.reducer
 
-export const { clearUser, clearAuthError, clearAuthMessage } = auth.actions
+export const { clearUser, clearAuthError, clearAuthMessage, setCommentReactions } = auth.actions
