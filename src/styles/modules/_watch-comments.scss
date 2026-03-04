@@ -129,6 +129,10 @@
   display: grid;
   gap: $spacing-2;
 
+  &__toggleLabel { font-size: $text-sm }
+  &__toggleChevron { width: 18px; display: inline-flex; justify-content: center; opacity: 0.9; font-size: $text-2xl; }
+  &__toggle.is-open { color: $text-primary; }
+
   &__toggle {
     @include button-ghost;
     display: inline-flex;
@@ -510,4 +514,27 @@
     justify-content: flex-end;
     gap: $spacing-2;
   }
+}
+
+.comment__textClamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.comment__textClamp--4 { -webkit-line-clamp: 4; }
+.comment__textClamp--3 { -webkit-line-clamp: 3; }
+
+.comment__more {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: $text-primary;
+  font-size: $text-sm;
+
+  &:hover { color: $primary; }
 }

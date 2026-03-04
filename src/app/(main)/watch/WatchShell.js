@@ -76,7 +76,7 @@ function VideoDescriptionPanel({ video }) {
   if (!hasTags && !hasDesc) return null
 
   return (
-    <div className="video-description">
+    <div style={{ border: '1px' }} className="video-description">
       {hasTags ? (
         <div className="video-description__topRow">
           <div className="video-description__tags">
@@ -91,16 +91,18 @@ function VideoDescriptionPanel({ video }) {
 
       {hasDesc ? (
         <div className="video-description__textRow">
-          <span className="video-description__text">{showMoreDesc ? description : descShort}</span>
+          <div className="video-description__text">{showMoreDesc ? description : descShort}</div>
 
           {showToggle ? (
-            <button
-              type="button"
-              className="video-description__more"
-              onClick={() => setShowMoreDesc((v) => !v)}
-            >
-              {showMoreDesc ? <T caseMode="lower">less</T> : <T caseMode="lower">...more</T>}
-            </button>
+            <div className="video-description__moreRow">
+              <button
+                type="button"
+                className="video-description__more"
+                onClick={() => setShowMoreDesc((v) => !v)}
+              >
+                {showMoreDesc ? <T caseMode="lower">less</T> : <T caseMode="lower">more</T>}
+              </button>
+            </div>
           ) : null}
         </div>
       ) : null}

@@ -55,7 +55,7 @@ export default function ChannelHandlePage() {
   const [showMoreBio, setShowMoreBio] = useState(false)
   const [showMoreDesc, setShowMoreDesc] = useState(false)
 
-  const more = useTranslate('...more')
+  const more = useTranslate('more')
   const less = useTranslate('less')
 
   const bio = useTranslate(channel?.bio || '')
