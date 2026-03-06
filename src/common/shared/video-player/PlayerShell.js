@@ -25,6 +25,7 @@ import {
   resetPlayback,
 } from '@/store/player/player-slice'
 import { resetWatch } from '@/store/videos/videos-slice'
+import { videoView } from '@/store/videos/videos-operations'
 
 export default function PlayerShell() {
   const dispatch = useDispatch()
@@ -173,6 +174,8 @@ export default function PlayerShell() {
     if (hasNext && nextId) goNext()
   }, [hasNext, nextId, goNext])
 
+  const onView = useCallback((videoId) => dispatch(videoView(videoId)), [dispatch])
+
   const playerNode = (
     <VideoPlayer
       videoId={currentVideoId}
@@ -180,6 +183,7 @@ export default function PlayerShell() {
       sources={sources}
       availableQualities={availableQualities}
       initialQuality={720}
+      onView={onView}
       onEnded={onEnded}
       hasNext={hasNext}
       hasPrev={hasPrev}

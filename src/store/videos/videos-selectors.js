@@ -29,3 +29,10 @@ export const getWatchSimilarHasMore = ({ videos }) => videos.watch.similar.hasMo
 export const getWatchSimilarNextCursor = ({ videos }) => videos.watch.similar.nextCursor
 export const getWatchSimilarFilter = ({ videos }) => videos.watch.similar.filter
 export const getShowPlaylist = ({ videos }) => videos.showPlaylist
+
+// Search selectors
+export const getSearchQuery = ({ videos }) => videos.search.q
+export const getSearchSort = ({ videos }) => videos.search.sort
+export const getSearchItems = ({ videos }) => videos.search.items
+export const getSearchHasMore = ({ videos }) => videos.search.hasMore
+export const getSearchNextCursor = ({ videos }) => videos.search.nextCursor

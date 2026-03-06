@@ -88,3 +88,10 @@ export const axiosReactVideo = async ({ id, value, visitorId } = {}) => {
   const { data } = await instance.post(`/videos/${videoId}/react`, { value, visitorId })
   return data
 }
+
+export const axiosSearchVideos = async (params) => {
+  const { data } = await instance.get('/videos/search', {
+    params: cleanParams(params),
+  })
+  return data
+}

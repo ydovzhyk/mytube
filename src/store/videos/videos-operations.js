@@ -10,10 +10,13 @@ import {
   axiosGetWatchVideo,
   axiosGetSimilarVideos,
   axiosReactVideo,
+  axiosSearchVideos,
 } from '@/lib/api/videos'
 import { axiosCreatePlaylist } from '@/lib/api/playlists'
 import { setUploadProgress } from './videos-slice'
 import { setPlaybackSnapshot } from '@/store/player/player-slice'
+import { setUser } from '@/store/auth/auth-slice'
+import { setVisitor } from '@/store/visitor/visitor-slice'
 
 const toReject = (error, rejectWithValue) => {
   const status = error?.response?.status || 0
@@ -100,7 +103,7 @@ export const getWatchVideo = createAsyncThunk(
           listId: params?.list || null,
         })
       )
-      
+
       return data
     } catch (e) {
       return toReject(e, rejectWithValue)
@@ -177,6 +180,27 @@ export const deleteVideo = createAsyncThunk(
   async (params, { rejectWithValue }) => {
     try {
       const data = await axiosDeleteVideo(params)
+      return data
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
+
+export const searchVideos = createAsyncThunk(
+  'videos/searchVideos',
+  async (params, { rejectWithValue, dispatch }) => {
+    try {
+      const data = await axiosSearchVideos(params)
+
+      if (data?.user) {
+        dispatch(setUser(data.user))
+      }
+
+      if (data?.visitor) {
+        dispatch(setVisitor(data.visitor))
+      }
+
       return data
     } catch (e) {
       return toReject(e, rejectWithValue)

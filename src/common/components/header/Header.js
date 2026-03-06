@@ -2,14 +2,15 @@
 
 import Link from 'next/link'
 import clsx from 'clsx'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useRouter } from 'next/navigation'
 
-import Avatar from '../../shared/avatar/Avatar'
 import { getLogin, getUser } from '@/store/auth/auth-selectors'
 import { logout } from '@/store/auth/auth-operations'
+import { getVisitor } from '@/store/visitor/visitor-selectors'
 
+import Avatar from '../../shared/avatar/Avatar'
 import TranslateMe from '@/utils/translating/translating'
 import T from '@/common/shared/i18n/T'
 import { useTranslate } from '@/utils/translating/translating'
@@ -18,17 +19,54 @@ import { FaPlay } from 'react-icons/fa'
 import { HiBell, HiMenu, HiPlus, HiSearch } from 'react-icons/hi'
 import { RxDividerVertical } from 'react-icons/rx'
 
+function cleanQ(v) {
+  return String(v || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+}
+
+function toIsoOrEmpty(d) {
+  const x = d ? new Date(d) : null
+  return x && !Number.isNaN(x.getTime()) ? x.toISOString() : ''
+}
+
 export function Header({ onMenuClick }) {
   const dispatch = useDispatch()
   const router = useRouter()
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
+
   const isLoggedIn = useSelector(getLogin)
   const user = useSelector(getUser)
+  const visitor = useSelector(getVisitor)
+
   const tSearchPlaceholder = useTranslate('Search videos, channels...')
   const tAddChannel = useTranslate('add channel')
   const tYourChannel = useTranslate('your channel')
   const tYourChannels = useTranslate('your channels')
+
+  const [query, setQuery] = useState('')
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const searchWrapRef = useRef(null)
+
+  const rawHistory = isLoggedIn ? user?.searchHistory : visitor?.searchHistory
+
+  const historyItems = useMemo(() => {
+    if (!Array.isArray(rawHistory)) return []
+    return rawHistory
+      .map((it) => ({
+        q: cleanQ(it?.q),
+        at: toIsoOrEmpty(it?.at),
+      }))
+      .filter((it) => it.q)
+  }, [rawHistory])
+
+  const filteredHistory = useMemo(() => {
+    const q = cleanQ(query).toLowerCase()
+    if (!q) return historyItems
+    return historyItems.filter((it) => it.q.toLowerCase().includes(q))
+  }, [historyItems, query])
 
   useEffect(() => {
     function handleOutsideClick(event) {
@@ -36,10 +74,60 @@ export function Header({ onMenuClick }) {
         setIsDropdownOpen(false)
       }
     }
-
     document.addEventListener('mousedown', handleOutsideClick)
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [])
+
+  useEffect(() => {
+    function handleOutsideClick(event) {
+      if (searchWrapRef.current && !searchWrapRef.current.contains(event.target)) {
+        setIsSearchOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [])
+
+  const goToSearchPage = useCallback(
+    (rawQ) => {
+      const value = cleanQ(rawQ)
+      if (value.length < 2) return
+      setQuery('')
+      setIsSearchOpen(false)
+      router.push(`/search?q=${encodeURIComponent(value)}`)
+    },
+    [router]
+  )
+
+  const onSubmitSearch = useCallback(
+    (e) => {
+      e.preventDefault()
+      goToSearchPage(query)
+    },
+    [goToSearchPage, query]
+  )
+
+  const onClickSearchIcon = useCallback(() => {
+    goToSearchPage(query)
+  }, [goToSearchPage, query])
+
+  const onKeyDownSearch = useCallback((e) => {
+    if (e.key === 'Escape') {
+      setIsSearchOpen(false)
+    }
+  }, [])
+
+  const onPickHistory = useCallback(
+    (item) => {
+      const q = cleanQ(item?.q)
+      if (!q) return
+      setQuery(q)
+      goToSearchPage(q)
+    },
+    [goToSearchPage]
+  )
+
+  const showHistory = isSearchOpen
 
   return (
     <header className="header">
@@ -56,10 +144,70 @@ export function Header({ onMenuClick }) {
         </div>
 
         <div className="header__center">
-          <form className="search-field">
-            <HiSearch className="search-field__icon" />
-            <input placeholder={tSearchPlaceholder} className="search-field__input" />
-          </form>
+          <div className="search-field-wrap" ref={searchWrapRef}>
+            <form className="search-field" onSubmit={onSubmitSearch}>
+              <button
+                type="button"
+                className="search-field__icon-btn"
+                onClick={onClickSearchIcon}
+                aria-label="Search"
+              >
+                <HiSearch className="search-field__icon" />
+              </button>
+
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={onKeyDownSearch}
+                onFocus={() => setIsSearchOpen(true)}
+                placeholder={tSearchPlaceholder}
+                className="search-field__input"
+                autoComplete="off"
+                enterKeyHint="search"
+                name="q"
+              />
+            </form>
+
+            {showHistory && (
+              <div className="search-suggest">
+                {filteredHistory.length === 0 ? (
+                  <div className="search-suggest__hint">No recent searches</div>
+                ) : (
+                  <div className="search-suggest__list">
+                    {filteredHistory.slice(0, 30).map((it) => {
+                      const key = `${it.q}__${it.at || ''}`
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          className="search-suggest__item search-suggest__item--history"
+                          onClick={() => onPickHistory(it)}
+                          title={it.q}
+                        >
+                          <div className="search-suggest__meta">
+                            <div className="search-suggest__title">{it.q}</div>
+                            {it.at ? (
+                              <div className="search-suggest__sub">
+                                {new Date(it.at).toLocaleString()}
+                              </div>
+                            ) : null}
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  className="search-suggest__all"
+                  onClick={() => setIsSearchOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="header__right">

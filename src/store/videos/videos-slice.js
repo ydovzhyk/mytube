@@ -9,6 +9,7 @@ import {
   getSimilarVideos,
   deleteVideo,
   reactVideo,
+  searchVideos,
 } from './videos-operations'
 
 const initialState = {
@@ -46,6 +47,18 @@ const initialState = {
       nextCursor: null,
       filter: 'all',
     },
+  },
+
+  // Search state (page: /search)
+  search: {
+    q: '',
+    tag: '',
+    sort: 'relevance',
+    items: [],
+    limit: 12,
+    hasMore: true,
+    nextCursor: null,
+    contextKey: null, // `${q}__${tag}__${sort}`
   },
 }
 
@@ -120,6 +133,36 @@ const videos = createSlice({
     },
     setShowPlaylist: (state, action) => {
       state.showPlaylist = Boolean(action.payload)
+    },
+    // Search reducers
+    resetSearchVideos: (state, action) => {
+      const { q = '', tag = '', sort = 'relevance' } = action.payload || {}
+      const _q = String(q || '').trim()
+      const _tag = String(tag || '').trim()
+      const _sort = String(sort || 'relevance')
+
+      const contextKey = `${_q}__${_tag}__${_sort}`
+
+      state.search.q = _q
+      state.search.tag = _tag
+      state.search.sort = _sort
+      state.search.items = []
+      state.search.limit = 12
+      state.search.hasMore = true
+      state.search.nextCursor = null
+      state.search.contextKey = contextKey
+    },
+
+    setSearchSort: (state, action) => {
+      state.search.sort = action.payload || 'relevance'
+    },
+
+    setSearchQuery: (state, action) => {
+      state.search.q = action.payload || ''
+    },
+
+    setSearchTag: (state, action) => {
+      state.search.tag = action.payload || ''
     },
   },
 
@@ -232,7 +275,6 @@ const videos = createSlice({
       .addCase(getWatchVideo.pending, (state, { meta }) => {
         state.loading = true
         state.error = null
-        // збережемо контекст listId (щоб UI знав)
         state.watch.listId = meta?.arg?.list || null
       })
       .addCase(getWatchVideo.fulfilled, (state, { payload }) => {
@@ -298,6 +340,65 @@ const videos = createSlice({
       .addCase(reactVideo.rejected, (state, { payload }) => {
         state.error = errMsg(payload)
       })
+
+      // * Search Videos
+      .addCase(searchVideos.pending, (state, { meta }) => {
+        state.loading = true
+        state.error = null
+
+        const q = meta?.arg?.q ?? state.search.q ?? ''
+        const tag = meta?.arg?.tag ?? state.search.tag ?? ''
+        const sort = meta?.arg?.sort ?? state.search.sort ?? 'relevance'
+
+        const _q = String(q || '').trim()
+        const _tag = String(tag || '').trim()
+        const _sort = String(sort || 'relevance')
+        const contextKey = `${_q}__${_tag}__${_sort}`
+
+        // if context changed — reset search result set
+        if (state.search.contextKey !== contextKey) {
+          state.search.items = []
+          state.search.nextCursor = null
+          state.search.hasMore = true
+        }
+
+        state.search.q = _q
+        state.search.tag = _tag
+        state.search.sort = _sort
+        state.search.limit = Number(meta?.arg?.limit || 12)
+        state.search.contextKey = contextKey
+      })
+      .addCase(searchVideos.fulfilled, (state, { payload, meta }) => {
+        state.loading = false
+
+        // protect from race conditions (old request finishing late)
+        const q = meta?.arg?.q ?? ''
+        const tag = meta?.arg?.tag ?? ''
+        const sort = meta?.arg?.sort ?? 'relevance'
+        const contextKey = `${String(q || '').trim()}__${String(tag || '').trim()}__${String(
+          sort || 'relevance'
+        )}`
+
+        if (state.search.contextKey !== contextKey) {
+          return
+        }
+
+        const mode = meta?.arg?.__mode || payload?.__mode || 'replace'
+        const items = Array.isArray(payload?.items) ? payload.items : []
+
+        if (mode === 'append') {
+          state.search.items = uniqById([...state.search.items, ...items])
+        } else {
+          state.search.items = items
+        }
+
+        state.search.hasMore = Boolean(payload?.hasMore)
+        state.search.nextCursor = payload?.nextCursor || null
+      })
+      .addCase(searchVideos.rejected, (state, { payload }) => {
+        state.loading = false
+        state.error = errMsg(payload)
+      })
   },
 })
 
@@ -316,4 +417,8 @@ export const {
   resetWatchSimilar,
   setShowPlaylist,
   setWatchCurrentVideo,
+  resetSearchVideos,
+  setSearchSort,
+  setSearchQuery,
+  setSearchTag,
 } = videos.actions

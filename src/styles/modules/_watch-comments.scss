@@ -47,7 +47,6 @@
     }
   }
 
-  /* composer */
   &__composer {
     display: grid;
     grid-template-columns: 40px 1fr;
@@ -108,14 +107,15 @@
     }
   }
 
-  /* list */
   &__list {
     display: grid;
     gap: $spacing-4;
+    margin-bottom: -$spacing-4;
   }
 
   &__empty {
-    padding: $spacing-4;
+    margin-top: $spacing-2;
+    padding: $spacing-2;
     text-align: center;
     color: $text-secondary;
     border-radius: $radius-md;
@@ -124,7 +124,6 @@
   }
 }
 
-/* Thread wrapper */
 .comment-thread {
   display: grid;
   gap: $spacing-2;
@@ -155,7 +154,7 @@
   }
 
   &__replies {
-    margin-left: 42px; /* align under text after avatar */
+    margin-left: 42px;
     padding-left: 14px;
     border-left: 2px solid rgba(255, 255, 255, 0.08);
     display: grid;
@@ -175,7 +174,6 @@
     }
   }
 
-  /* reply row is tighter */
   &--reply {
     grid-template-columns: 34px 1fr;
 
@@ -211,7 +209,6 @@
     font-size: $text-xs;
   }
 
-  /* NEW: clickable handle under/near name */
   &__handleLink {
     color: $text-secondary;
     font-size: $text-xs;
@@ -295,7 +292,6 @@
     }
   }
 
-  /* NEW: linkified URLs */
   &__link {
     color: $primary;
     text-decoration: underline;
@@ -338,7 +334,6 @@
       cursor: not-allowed;
     }
 
-    /* ✅ ACTIVE STATE (added, nothing removed) */
     &.is-active {
       color: $text-primary;
       background: rgba(255, 255, 255, 0.12);
@@ -368,7 +363,6 @@
     }
   }
 
-  /* NEW: edit/delete buttons */
   &__editBtn,
   &__deleteBtn {
     @include button-ghost;
@@ -407,7 +401,6 @@
   }
 }
 
-/* Modal */
 .comment-modal {
   position: fixed;
   inset: 0;
@@ -423,26 +416,26 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: min(640px, calc(100vw - 24px));
+    width: min(450px, calc(100vw - 24px));
     transform: translate(-50%, -50%);
     background: $bg-elevated;
     border: 1px solid $border-default;
     border-radius: $radius-xl;
     box-shadow: $shadow-xl;
-    padding: $spacing-4;
+    padding: $spacing-3;
     display: grid;
-    gap: $spacing-3;
+    gap: $spacing-2;
   }
 
   &__head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: $spacing-3;
+    padding: $spacing-1;
   }
 
   &__title {
-    font-size: $text-lg;
+    font-size: $text-base;
     font-weight: $font-semibold;
   }
 
@@ -490,7 +483,6 @@
     @include text-ellipsis;
   }
 
-  /* NEW: handle in preview */
   &__previewHandle {
     color: $text-secondary;
     font-size: $text-xs;

@@ -12,6 +12,7 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -23,7 +24,7 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  
+
   @include custom-scrollbar;
 }
 
@@ -55,7 +56,7 @@ p {
 a {
   color: inherit;
   text-decoration: none;
-  
+
   &:hover {
     color: $primary-light;
   }
