@@ -54,11 +54,12 @@ const initialState = {
     q: '',
     tag: '',
     sort: 'relevance',
+    inMyPlaylists: '',
     items: [],
     limit: 12,
     hasMore: true,
     nextCursor: null,
-    contextKey: null, // `${q}__${tag}__${sort}`
+    contextKey: null, // `${q}__${tag}__${sort}__${inMyPlaylists}`
   },
 }
 
@@ -134,18 +135,22 @@ const videos = createSlice({
     setShowPlaylist: (state, action) => {
       state.showPlaylist = Boolean(action.payload)
     },
+
     // Search reducers
     resetSearchVideos: (state, action) => {
-      const { q = '', tag = '', sort = 'relevance' } = action.payload || {}
+      const { q = '', tag = '', sort = 'relevance', inMyPlaylists = '' } = action.payload || {}
+
       const _q = String(q || '').trim()
       const _tag = String(tag || '').trim()
-      const _sort = String(sort || 'relevance')
+      const _sort = String(sort || 'relevance').trim()
+      const _inMyPlaylists = String(inMyPlaylists || '').trim()
 
-      const contextKey = `${_q}__${_tag}__${_sort}`
+      const contextKey = `${_q}__${_tag}__${_sort}__${_inMyPlaylists}`
 
       state.search.q = _q
       state.search.tag = _tag
       state.search.sort = _sort
+      state.search.inMyPlaylists = _inMyPlaylists
       state.search.items = []
       state.search.limit = 12
       state.search.hasMore = true
@@ -349,11 +354,14 @@ const videos = createSlice({
         const q = meta?.arg?.q ?? state.search.q ?? ''
         const tag = meta?.arg?.tag ?? state.search.tag ?? ''
         const sort = meta?.arg?.sort ?? state.search.sort ?? 'relevance'
+        const inMyPlaylists = meta?.arg?.inMyPlaylists ?? state.search.inMyPlaylists ?? ''
 
         const _q = String(q || '').trim()
         const _tag = String(tag || '').trim()
-        const _sort = String(sort || 'relevance')
-        const contextKey = `${_q}__${_tag}__${_sort}`
+        const _sort = String(sort || 'relevance').trim()
+        const _inMyPlaylists = String(inMyPlaylists || '').trim()
+
+        const contextKey = `${_q}__${_tag}__${_sort}__${_inMyPlaylists}`
 
         // if context changed — reset search result set
         if (state.search.contextKey !== contextKey) {
@@ -365,6 +373,7 @@ const videos = createSlice({
         state.search.q = _q
         state.search.tag = _tag
         state.search.sort = _sort
+        state.search.inMyPlaylists = _inMyPlaylists
         state.search.limit = Number(meta?.arg?.limit || 12)
         state.search.contextKey = contextKey
       })
@@ -375,9 +384,11 @@ const videos = createSlice({
         const q = meta?.arg?.q ?? ''
         const tag = meta?.arg?.tag ?? ''
         const sort = meta?.arg?.sort ?? 'relevance'
+        const inMyPlaylists = meta?.arg?.inMyPlaylists ?? ''
+
         const contextKey = `${String(q || '').trim()}__${String(tag || '').trim()}__${String(
           sort || 'relevance'
-        )}`
+        ).trim()}__${String(inMyPlaylists || '').trim()}`
 
         if (state.search.contextKey !== contextKey) {
           return

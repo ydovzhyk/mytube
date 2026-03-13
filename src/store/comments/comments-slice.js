@@ -10,7 +10,6 @@ import {
 const initialState = {
   error: null,
   message: null,
-
   // videoId -> { items: [], cursor: '', hasMore: true, loading: false }
   byVideoId: {},
 }
@@ -68,13 +67,11 @@ const commentsSlice = createSlice({
     clearCommentsMessage(state) {
       state.message = null
     },
-
     resetCommentsForVideo(state, { payload }) {
       const videoId = toId(payload)
       if (!videoId) return
       delete state.byVideoId[videoId]
     },
-
     clearComments(state) {
       state.byVideoId = {}
       state.error = null
@@ -84,19 +81,13 @@ const commentsSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-
-      // ======================
-      // GET COMMENTS
-      // ======================
       .addCase(getCommentsByVideoId.pending, (state, { meta }) => {
         state.error = null
         state.message = null
-
         const videoId = toId(meta?.arg?.videoId)
         const bucket = ensureBucket(state, videoId)
         if (bucket) bucket.loading = true
       })
-
       .addCase(getCommentsByVideoId.fulfilled, (state, { payload }) => {
         const videoId = toId(payload?.videoId)
         const bucket = ensureBucket(state, videoId)
@@ -110,73 +101,50 @@ const commentsSlice = createSlice({
         bucket.hasMore = Boolean(payload?.hasMore)
         bucket.loading = false
       })
-
       .addCase(getCommentsByVideoId.rejected, (state, { payload, meta }) => {
         state.error = errMsg(payload)
-
         const videoId = toId(meta?.arg?.videoId)
         const bucket = ensureBucket(state, videoId)
         if (bucket) {
           bucket.loading = false
         }
       })
-
-      // ======================
-      // CREATE COMMENT
-      // ======================
       .addCase(createComment.pending, (state) => {
         state.error = null
         state.message = null
       })
-
       .addCase(createComment.fulfilled, (state, { payload }) => {
         const videoId = toId(payload?.videoId)
         const comment = payload?.comment
-
         state.message = okMsg(payload, 'Comment created')
-
         const bucket = ensureBucket(state, videoId)
         if (!bucket || !comment) return
 
         bucket.items = upsertById(bucket.items, comment)
       })
-
       .addCase(createComment.rejected, (state, { payload }) => {
         state.error = errMsg(payload)
       })
-
-      // ======================
-      // EDIT COMMENT
-      // ======================
       .addCase(editComment.pending, (state) => {
         state.error = null
         state.message = null
       })
-
       .addCase(editComment.fulfilled, (state, { payload }) => {
         const videoId = toId(payload?.videoId)
         const comment = payload?.comment
-
         state.message = okMsg(payload, 'Comment edited')
-
         const bucket = ensureBucket(state, videoId)
         if (!bucket || !comment) return
 
         bucket.items = upsertById(bucket.items, comment)
       })
-
       .addCase(editComment.rejected, (state, { payload }) => {
         state.error = errMsg(payload)
       })
-
-      // ======================
-      // DELETE COMMENT
-      // ======================
       .addCase(deleteComment.pending, (state) => {
         state.error = null
         state.message = null
       })
-
       .addCase(deleteComment.fulfilled, (state, { payload }) => {
         const videoId = toId(payload?.videoId)
         const id = toId(payload?.id)
@@ -195,19 +163,13 @@ const commentsSlice = createSlice({
           }
         })
       })
-
       .addCase(deleteComment.rejected, (state, { payload }) => {
         state.error = errMsg(payload)
       })
-
-      // ======================
-      // REACT COMMENT
-      // ======================
       .addCase(reactComment.pending, (state) => {
         state.error = null
         state.message = null
       })
-
       .addCase(reactComment.fulfilled, (state, { payload }) => {
         const videoId = toId(payload?.videoId)
         const commentId = toId(payload?.commentId)
@@ -224,7 +186,6 @@ const commentsSlice = createSlice({
           }
         })
       })
-
       .addCase(reactComment.rejected, (state, { payload }) => {
         state.error = errMsg(payload)
       })

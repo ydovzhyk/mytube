@@ -4,7 +4,9 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
 
-import VideoCard from '@/common/shared/video-card/VideoCard'
+import { useTranslate } from '@/utils/translating/translating'
+import SearchVideosSection from '@/common/components/search/SearchVideosSection'
+import SearchVideoFilters from '@/common/components/search/SearchVideoFilters'
 
 import { searchVideos } from '@/store/videos/videos-operations'
 import {
@@ -13,6 +15,7 @@ import {
   getSearchNextCursor,
   getSearchQuery,
   getSearchSort,
+  getSearchInMyPlaylists,
   getVideosLoading,
 } from '@/store/videos/videos-selectors'
 
@@ -25,12 +28,8 @@ function cleanQ(v) {
     .replace(/\s+/g, ' ')
 }
 
-export default function SearchPage() {
+function SearchPageContent({ qFromUrl, sortFromUrl, inMyPlaylistsFromUrl }) {
   const dispatch = useDispatch()
-  const searchParams = useSearchParams()
-
-  const qFromUrl = cleanQ(searchParams.get('q') || '')
-  const sortFromUrl = String(searchParams.get('sort') || 'relevance').trim()
 
   const isLoggedIn = useSelector(getLogin)
   const visitorId = useSelector(getVisitorId)
@@ -41,10 +40,21 @@ export default function SearchPage() {
   const currentQ = useSelector(getSearchQuery)
   const currentSort = useSelector(getSearchSort)
   const loading = useSelector(getVideosLoading)
+  const currentInMyPlaylists = useSelector(getSearchInMyPlaylists)
 
   const loadMoreRef = useRef(null)
 
-  const contextMatches = cleanQ(currentQ) === qFromUrl && String(currentSort || '') === sortFromUrl
+  const tSearchResults = useTranslate('Search Results')
+  const tSearch = useTranslate('Search')
+  const tEnterAtLeast2 = useTranslate('Enter at least 2 characters to search videos')
+
+  const contextMatches = useMemo(() => {
+    return (
+      cleanQ(currentQ) === qFromUrl &&
+      String(currentSort || '') === sortFromUrl &&
+      String(currentInMyPlaylists || '') === String(inMyPlaylistsFromUrl || '')
+    )
+  }, [currentQ, qFromUrl, currentSort, sortFromUrl, currentInMyPlaylists, inMyPlaylistsFromUrl])
 
   useEffect(() => {
     if (qFromUrl.length < 2) return
@@ -56,17 +66,21 @@ export default function SearchPage() {
       __mode: 'replace',
     }
 
+    if (inMyPlaylistsFromUrl === '0' && isLoggedIn) {
+      payload.inMyPlaylists = '0'
+    }
+
     if (!isLoggedIn && visitorId) {
       payload.visitorId = visitorId
     }
 
     dispatch(searchVideos(payload))
-  }, [dispatch, qFromUrl, sortFromUrl, isLoggedIn, visitorId])
+  }, [dispatch, qFromUrl, sortFromUrl, inMyPlaylistsFromUrl, isLoggedIn, visitorId])
 
   useEffect(() => {
     if (!loadMoreRef.current) return
     if (!hasMore) return
-    if (!qFromUrl || qFromUrl.length < 2) return
+    if (qFromUrl.length < 2) return
 
     const node = loadMoreRef.current
 
@@ -85,6 +99,10 @@ export default function SearchPage() {
           __mode: 'append',
         }
 
+        if (inMyPlaylistsFromUrl === '0' && isLoggedIn) {
+          payload.inMyPlaylists = '0'
+        }
+
         if (!isLoggedIn && visitorId) {
           payload.visitorId = visitorId
         }
@@ -99,41 +117,76 @@ export default function SearchPage() {
     )
 
     observer.observe(node)
-
     return () => observer.disconnect()
-  }, [dispatch, qFromUrl, sortFromUrl, hasMore, nextCursor, loading, isLoggedIn, visitorId])
+  }, [
+    dispatch,
+    qFromUrl,
+    sortFromUrl,
+    inMyPlaylistsFromUrl,
+    hasMore,
+    nextCursor,
+    loading,
+    isLoggedIn,
+    visitorId,
+  ])
 
   const title = useMemo(() => {
-    if (!qFromUrl) return 'Search'
-    return `Search Results: "${qFromUrl}"`
-  }, [qFromUrl])
+    if (!qFromUrl) return tSearch
+    return `${tSearchResults}: "${qFromUrl}"`
+  }, [qFromUrl, tSearch, tSearchResults])
 
   if (qFromUrl.length < 2) {
     return (
-      <div>
-        <div className="page-header">
-          <h1 className="page-header__title">Search</h1>
-          <p className="page-header__subtitle">Enter at least 2 characters to search videos</p>
+      <div className="search-page">
+        <div className="search-page__top">
+          <h1 className="search-page__title">{tSearch}</h1>
+          <p className="search-page__subtitle">{tEnterAtLeast2}</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div>
-      <div className="page-header">
-        <h1 className="page-header__title">{title}</h1>
+    <div className="search-page">
+      <div className="search-page__top">
+        <h1 className="search-page__title">{title}</h1>
       </div>
 
-      <div className="video-grid">
-        {items?.length ? (
-          items.map((video) => <VideoCard key={video._id} video={video} />)
-        ) : !loading && contextMatches ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No videos found</div>
-        ) : null}
-      </div>
+      {/* Тут потім спокійно додаси SearchPlaylistsSection */}
+      {/* <SearchPlaylistsSection qFromUrl={qFromUrl} /> */}
 
-      <div ref={loadMoreRef} style={{ height: 1 }} />
+      <SearchVideoFilters
+        sortFromUrl={sortFromUrl}
+        inMyPlaylistsFromUrl={inMyPlaylistsFromUrl}
+        isLoggedIn={isLoggedIn}
+      />
+
+      <SearchVideosSection
+        qFromUrl={qFromUrl}
+        items={items}
+        loading={loading}
+        contextMatches={contextMatches}
+        inMyPlaylistsFromUrl={inMyPlaylistsFromUrl}
+      />
+
+      <div ref={loadMoreRef} className="search-page__observer" />
     </div>
+  )
+}
+
+export default function SearchPage() {
+  const searchParams = useSearchParams()
+
+  const qFromUrl = cleanQ(searchParams.get('q') || '')
+  const sortFromUrl = String(searchParams.get('sort') || 'relevance').trim()
+  const inMyPlaylistsFromUrl = String(searchParams.get('inMyPlaylists') || '').trim()
+
+  return (
+    <SearchPageContent
+      key={`${qFromUrl}__${sortFromUrl}__${inMyPlaylistsFromUrl}`}
+      qFromUrl={qFromUrl}
+      sortFromUrl={sortFromUrl}
+      inMyPlaylistsFromUrl={inMyPlaylistsFromUrl}
+    />
   )
 }

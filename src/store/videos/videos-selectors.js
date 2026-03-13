@@ -36,3 +36,4 @@ export const getSearchSort = ({ videos }) => videos.search.sort
 export const getSearchItems = ({ videos }) => videos.search.items
 export const getSearchHasMore = ({ videos }) => videos.search.hasMore
 export const getSearchNextCursor = ({ videos }) => videos.search.nextCursor
+export const getSearchInMyPlaylists = ({ videos }) => videos.search.inMyPlaylists

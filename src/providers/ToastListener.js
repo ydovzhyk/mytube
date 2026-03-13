@@ -25,6 +25,12 @@ import { clearVideosError, clearVideosMessage } from '@/store/videos/videos-slic
 import { getVisitorError } from '@/store/visitor/visitor-selectors'
 import { clearVisitorError } from '@/store/visitor/visitor-slice'
 
+import { getMyPlaylistsError, getMyPlaylistsMessage } from '@/store/my-playlists/my-playlists-selectors'
+import { clearMyPlaylistsError, clearMyPlaylistsMessage } from '@/store/my-playlists/my-playlists-slice'
+
+import { getCommentsError, getCommentsMessage } from '@/store/comments/comments-selectors'
+import { clearCommentsError, clearCommentsMessage } from '@/store/comments/comments-slice'
+
 const toStr = (v) => {
   if (!v) return ''
   if (typeof v === 'string') return v
@@ -93,6 +99,12 @@ function useToastPair({ error, message, clearError, clearMessage }) {
 }
 
 export default function ToastListener() {
+  const commentsError = useSelector(getCommentsError)
+  const commentsMessage = useSelector(getCommentsMessage)
+
+  const myPlaylistsError = useSelector(getMyPlaylistsError)
+  const myPlaylistsMessage = useSelector(getMyPlaylistsMessage)
+
   const channelsError = useSelector(getChannelsError)
   const channelsMessage = useSelector(getChannelsMessage)
 
@@ -109,6 +121,20 @@ export default function ToastListener() {
   const videosMessage = useSelector(getVideosMessage)
 
   const visitorError = useSelector(getVisitorError)
+
+  useToastPair({
+    error: commentsError,
+    message: commentsMessage,
+    clearError: clearCommentsError,
+    clearMessage: clearCommentsMessage,
+  })
+
+  useToastPair({
+    error: myPlaylistsError,
+    message: myPlaylistsMessage,
+    clearError: clearMyPlaylistsError,
+    clearMessage: clearMyPlaylistsMessage,
+  })
 
   useToastPair({
     error: channelsError,
@@ -147,7 +173,9 @@ export default function ToastListener() {
 
   useToastPair({
     error: visitorError,
+    message: null,
     clearError: clearVisitorError,
+    clearMessage: () => {},
   })
 
   return null
