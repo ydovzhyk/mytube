@@ -351,10 +351,17 @@ const videos = createSlice({
         state.loading = true
         state.error = null
 
-        const q = meta?.arg?.q ?? state.search.q ?? ''
-        const tag = meta?.arg?.tag ?? state.search.tag ?? ''
-        const sort = meta?.arg?.sort ?? state.search.sort ?? 'relevance'
-        const inMyPlaylists = meta?.arg?.inMyPlaylists ?? state.search.inMyPlaylists ?? ''
+        const arg = meta?.arg || {}
+
+        const q = arg.q ?? state.search.q ?? ''
+        const tag = arg.tag ?? state.search.tag ?? ''
+        const sort = arg.sort ?? state.search.sort ?? 'relevance'
+
+        // IMPORTANT:
+        // if param is omitted in the new request, it means "reset to empty"
+        const inMyPlaylists = Object.prototype.hasOwnProperty.call(arg, 'inMyPlaylists')
+          ? arg.inMyPlaylists
+          : ''
 
         const _q = String(q || '').trim()
         const _tag = String(tag || '').trim()
@@ -363,7 +370,6 @@ const videos = createSlice({
 
         const contextKey = `${_q}__${_tag}__${_sort}__${_inMyPlaylists}`
 
-        // if context changed — reset search result set
         if (state.search.contextKey !== contextKey) {
           state.search.items = []
           state.search.nextCursor = null
@@ -374,17 +380,20 @@ const videos = createSlice({
         state.search.tag = _tag
         state.search.sort = _sort
         state.search.inMyPlaylists = _inMyPlaylists
-        state.search.limit = Number(meta?.arg?.limit || 12)
+        state.search.limit = Number(arg.limit || 12)
         state.search.contextKey = contextKey
       })
       .addCase(searchVideos.fulfilled, (state, { payload, meta }) => {
         state.loading = false
 
-        // protect from race conditions (old request finishing late)
-        const q = meta?.arg?.q ?? ''
-        const tag = meta?.arg?.tag ?? ''
-        const sort = meta?.arg?.sort ?? 'relevance'
-        const inMyPlaylists = meta?.arg?.inMyPlaylists ?? ''
+        const arg = meta?.arg || {}
+
+        const q = arg.q ?? ''
+        const tag = arg.tag ?? ''
+        const sort = arg.sort ?? 'relevance'
+        const inMyPlaylists = Object.prototype.hasOwnProperty.call(arg, 'inMyPlaylists')
+          ? arg.inMyPlaylists
+          : ''
 
         const contextKey = `${String(q || '').trim()}__${String(tag || '').trim()}__${String(
           sort || 'relevance'
@@ -394,7 +403,7 @@ const videos = createSlice({
           return
         }
 
-        const mode = meta?.arg?.__mode || payload?.__mode || 'replace'
+        const mode = arg.__mode || payload?.__mode || 'replace'
         const items = Array.isArray(payload?.items) ? payload.items : []
 
         if (mode === 'append') {

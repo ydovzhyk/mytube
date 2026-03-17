@@ -2,12 +2,11 @@
 @use '../mixins' as *;
 
 .search-page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-6;
   min-height: 100%;
   color: $text-primary;
-
-  &__top {
-    margin-bottom: $spacing-6;
-  }
 
   &__title {
     font-size: $text-2xl;
@@ -20,10 +19,6 @@
     margin-top: $spacing-2;
     font-size: $text-base;
     color: $text-secondary;
-  }
-
-  &__playlist-panel {
-    margin-bottom: $spacing-4;
   }
 
   &__playlist-modes {
@@ -62,7 +57,6 @@
     grid-template-columns: minmax(0, 1fr) auto;
     gap: $spacing-4;
     align-items: start;
-    margin-bottom: $spacing-4;
 
     @media (max-width: $breakpoint-md) {
       grid-template-columns: 1fr;
@@ -360,12 +354,9 @@
 
   &__empty {
     grid-column: 1 / -1;
-    padding: $spacing-8;
+    padding: $spacing-5;
     text-align: center;
-    color: $text-secondary;
-    border: 1px dashed $border-default;
-    border-radius: $radius-xl;
-    background: rgba(255, 255, 255, 0.02);
+    color: $text-muted;
   }
 
   &__observer {
@@ -375,7 +366,20 @@
 
 //Search panel
 .search-filters {
-  margin-bottom: $spacing-4;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-3;
+    margin-bottom: $spacing-5;
+  }
+
+  &__title {
+    font-size: $text-lg;
+    font-weight: $font-semibold;
+    color: $text-primary;
+  }
 }
 
 .search-filters__list {
@@ -402,4 +406,14 @@
     color: $text-primary;
     box-shadow: $glow-primary;
   }
+}
+
+.search-filters__item--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.search-filters__list--loading {
+  pointer-events: none;
 }

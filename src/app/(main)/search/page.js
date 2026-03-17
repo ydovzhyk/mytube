@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
 
 import { useTranslate } from '@/utils/translating/translating'
+import SearchPlaylistsSection from '@/common/components/search/SearchPlaylistsSection'
 import SearchVideosSection from '@/common/components/search/SearchVideosSection'
 import SearchVideoFilters from '@/common/components/search/SearchVideoFilters'
 
@@ -28,7 +29,12 @@ function cleanQ(v) {
     .replace(/\s+/g, ' ')
 }
 
-function SearchPageContent({ qFromUrl, sortFromUrl, inMyPlaylistsFromUrl }) {
+function toPositiveInt(v, fallback = 1) {
+  const n = Number(v)
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback
+}
+
+function SearchPageContent({ qFromUrl, sortFromUrl, inMyPlaylistsFromUrl, playlistPageFromUrl }) {
   const dispatch = useDispatch()
 
   const isLoggedIn = useSelector(getLogin)
@@ -148,17 +154,15 @@ function SearchPageContent({ qFromUrl, sortFromUrl, inMyPlaylistsFromUrl }) {
 
   return (
     <div className="search-page">
-      <div className="search-page__top">
-        <h1 className="search-page__title">{title}</h1>
-      </div>
+      <h1 className="search-page__title">{title}</h1>
 
-      {/* Тут потім спокійно додаси SearchPlaylistsSection */}
-      {/* <SearchPlaylistsSection qFromUrl={qFromUrl} /> */}
+      <SearchPlaylistsSection qFromUrl={qFromUrl} playlistPageFromUrl={playlistPageFromUrl} />
 
       <SearchVideoFilters
         sortFromUrl={sortFromUrl}
         inMyPlaylistsFromUrl={inMyPlaylistsFromUrl}
         isLoggedIn={isLoggedIn}
+        loading={loading}
       />
 
       <SearchVideosSection
@@ -180,13 +184,15 @@ export default function SearchPage() {
   const qFromUrl = cleanQ(searchParams.get('q') || '')
   const sortFromUrl = String(searchParams.get('sort') || 'relevance').trim()
   const inMyPlaylistsFromUrl = String(searchParams.get('inMyPlaylists') || '').trim()
+  const playlistPageFromUrl = toPositiveInt(searchParams.get('playlistPage') || 1, 1)
 
   return (
     <SearchPageContent
-      key={`${qFromUrl}__${sortFromUrl}__${inMyPlaylistsFromUrl}`}
+      key={`${qFromUrl}__${sortFromUrl}__${inMyPlaylistsFromUrl}__${playlistPageFromUrl}`}
       qFromUrl={qFromUrl}
       sortFromUrl={sortFromUrl}
       inMyPlaylistsFromUrl={inMyPlaylistsFromUrl}
+      playlistPageFromUrl={playlistPageFromUrl}
     />
   )
 }

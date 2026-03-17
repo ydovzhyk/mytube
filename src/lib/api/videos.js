@@ -66,6 +66,7 @@ export const axiosVideoView = async (videoId) => {
 }
 
 export const axiosGetWatchVideo = async ({ id, list } = {}) => {
+  console.log('Getting watch video with id:', id, 'and list:', list)
   const videoId = String(id || '').trim()
   if (!videoId) throw new Error('Video id is required')
   const { data } = await instance.get(`/videos/${videoId}`, {
@@ -90,6 +91,7 @@ export const axiosReactVideo = async ({ id, value, visitorId } = {}) => {
 }
 
 export const axiosSearchVideos = async (params) => {
+  console.log('Searching videos with params:', params)
   const { data } = await instance.get('/videos/search', {
     params: cleanParams(params),
   })

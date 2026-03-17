@@ -1,0 +1,78 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.search-playlists {
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-5;
+  }
+
+  &__title {
+    font-size: $text-lg;
+    font-weight: $font-semibold;
+    color: $text-primary;
+  }
+
+  &__count {
+    font-size: $text-sm;
+    color: $text-muted;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-6;
+  }
+
+  &__empty {
+    padding: $spacing-5;
+    text-align: center;
+    color: $text-muted;
+  }
+
+  &__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  &__pageBtn {
+    min-width: 92px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: $radius-md;
+    border: 1px solid $bg-tertiary;
+    background: transparent;
+    color: $text-primary;
+    cursor: pointer;
+    transition:
+      border-color $transition-fast,
+      background-color $transition-fast;
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: $primary;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__pageInfo {
+    font-size: $text-sm;
+    color: $text-secondary;
+  }
+
+  @include md {
+    &__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}

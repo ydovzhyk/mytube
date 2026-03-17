@@ -6,3 +6,9 @@ export const axiosCreatePlaylist = async (formData) => {
   })
   return data
 }
+
+export const axiosSearchPlaylists = async (params) => {
+  console.log('Searching playlists with params:', params)
+  const { data } = await instance.get('/playlists/search', { params })
+  return data
+}

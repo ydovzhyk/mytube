@@ -14,7 +14,7 @@ import { getAuthError, getAuthMessage } from '@/store/auth/auth-selectors'
 import { clearAuthError, clearAuthMessage } from '@/store/auth/auth-slice'
 
 import { getPlaylistsError, getPlaylistsMessage } from '@/store/playlists/playlists-selectors'
-import { clearPlaylistsError, clearPlayListsMessage } from '@/store/playlists/playlists-slice'
+import { clearPlaylistsError, clearPlaylistsMessage } from '@/store/playlists/playlists-slice'
 
 import { getTechnicalError, getTechnicalMessage } from '@/store/technical/technical-selectors'
 import { clearTechnicalError, clearTechnicalMessage } from '@/store/technical/technical-slice'
@@ -154,7 +154,7 @@ export default function ToastListener() {
     error: playlistsError,
     message: playlistsMessage,
     clearError: clearPlaylistsError,
-    clearMessage: clearPlayListsMessage,
+    clearMessage: clearPlaylistsMessage,
   })
 
   useToastPair({
