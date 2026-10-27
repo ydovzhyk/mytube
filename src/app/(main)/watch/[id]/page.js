@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { Suspense, useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams, useSearchParams } from 'next/navigation'
 
@@ -8,7 +8,7 @@ import { getWatchVideo } from '@/store/videos/videos-operations'
 import { resetWatch, setWatchCurrentVideo } from '@/store/videos/videos-slice'
 import { getWatchPlaylist } from '@/store/videos/videos-selectors'
 
-export default function WatchIdPage() {
+function WatchIdPageInner() {
   const dispatch = useDispatch()
   const params = useParams()
   const searchParams = useSearchParams()
@@ -42,6 +42,14 @@ export default function WatchIdPage() {
   }, [dispatch, id, list, playlistItems])
 
   return null
+}
+
+export default function WatchIdPage() {
+  return (
+    <Suspense fallback={null}>
+      <WatchIdPageInner />
+    </Suspense>
+  )
 }
 
 // 'use client'

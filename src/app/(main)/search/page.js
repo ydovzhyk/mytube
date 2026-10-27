@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -178,7 +178,7 @@ function SearchPageContent({ qFromUrl, sortFromUrl, inMyPlaylistsFromUrl, playli
   )
 }
 
-export default function SearchPage() {
+function SearchPageInner() {
   const searchParams = useSearchParams()
 
   const qFromUrl = cleanQ(searchParams.get('q') || '')
@@ -194,5 +194,13 @@ export default function SearchPage() {
       inMyPlaylistsFromUrl={inMyPlaylistsFromUrl}
       playlistPageFromUrl={playlistPageFromUrl}
     />
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={null}>
+      <SearchPageInner />
+    </Suspense>
   )
 }
