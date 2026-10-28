@@ -111,7 +111,10 @@ export default function VideoUploadForm() {
   const statusText = useMemo(() => {
     if (phase === 'uploading') return { title: 'Uploading…', meta: `${pct}%` }
     if (phase === 'processing')
-      return { title: 'Video sent. Processing on server…', meta: 'transcoding 360p/480p/720p' }
+      return {
+        title: 'Uploaded. Processing on server…',
+        meta: 'transcoding 360p/480p/720p — you can wait, status is polled from DB',
+      }
     if (phase === 'done') return { title: 'Upload complete', meta: '✅' }
     if (phase === 'error') return { title: 'Upload failed', meta: '⚠️' }
     return null

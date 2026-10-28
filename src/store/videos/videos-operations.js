@@ -11,6 +11,7 @@ import {
   axiosGetSimilarVideos,
   axiosReactVideo,
   axiosSearchVideos,
+  pollVideoUploadUntilDone,
 } from '@/lib/api/videos'
 import { axiosCreatePlaylist } from '@/lib/api/playlists'
 import { setUploadProgress } from './videos-slice'
@@ -28,14 +29,28 @@ export const uploadVideo = createAsyncThunk(
   'videos/upload-video',
   async (formData, { dispatch, rejectWithValue }) => {
     try {
-      const data = await axiosUploadVideo(formData, {
+      // 1) Transfer file → server responds 202 + videoId (processing continues in background)
+      const accepted = await axiosUploadVideo(formData, {
         onUploadProgress: (e) => {
           if (!e.total) return
           const percent = Math.round((e.loaded * 100) / e.total)
           dispatch(setUploadProgress(percent))
         },
       })
-      return data
+
+      dispatch(setUploadProgress(100))
+
+      const videoId = accepted?.videoId
+      if (!videoId) {
+        // backward-compatible: old sync 201 with full video
+        if (accepted?.video) return accepted
+        throw new Error('Upload accepted but videoId is missing')
+      }
+
+      // 2) Poll Mongo status until ready / failed (avoids Network Error on long HTTP)
+      return await pollVideoUploadUntilDone(videoId, {
+        pollAfterMs: accepted?.pollAfterMs,
+      })
     } catch (e) {
       return toReject(e, rejectWithValue)
     }

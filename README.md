@@ -14,6 +14,7 @@ Next.js client for MyTube — a YouTube-like video platform (watch, search, chan
 - Auth: email+password and Google OAuth
 - Redux Toolkit + redux-persist
 - Cookie-based API auth (`withCredentials`)
+- Async video upload: transfer → `202` → poll `/videos/:id/status` (avoids Network Error on long transcodes)
 - UI translations helper (`/api/translate` Next route)
 - Sass styling, React Hook Form, toast notifications
 
