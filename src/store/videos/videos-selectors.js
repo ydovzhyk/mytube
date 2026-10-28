@@ -5,6 +5,7 @@ export const getVideosMessage = ({ videos }) => videos.message
 // Upload selectors
 export const getVideosUploadLoading = ({ videos }) => videos.uploadLoading
 export const getVideosUploadProgress = ({ videos }) => videos.uploadProgress
+export const getManageVideo = ({ videos }) => videos.manageVideo
 
 // Videos list selectors
 export const getVideosList = ({ videos }) => videos.videos

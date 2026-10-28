@@ -12,6 +12,8 @@ import {
   axiosReactVideo,
   axiosSearchVideos,
   pollVideoUploadUntilDone,
+  axiosGetManageVideo,
+  axiosUpdateVideo,
 } from '@/lib/api/videos'
 import { axiosCreatePlaylist } from '@/lib/api/playlists'
 import { setUploadProgress } from './videos-slice'
@@ -195,6 +197,45 @@ export const deleteVideo = createAsyncThunk(
   async (params, { rejectWithValue }) => {
     try {
       const data = await axiosDeleteVideo(params)
+      return data
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
+
+export const getManageVideo = createAsyncThunk(
+  'videos/get-manage-video',
+  async (videoId, { rejectWithValue }) => {
+    try {
+      const data = await axiosGetManageVideo(videoId)
+      return data
+    } catch (e) {
+      return toReject(e, rejectWithValue)
+    }
+  }
+)
+
+export const updateVideo = createAsyncThunk(
+  'videos/update-video',
+  async ({ videoId, formData }, { dispatch, rejectWithValue }) => {
+    try {
+      const data = await axiosUpdateVideo(videoId, formData, {
+        onUploadProgress: (e) => {
+          if (!e.total) return
+          const percent = Math.round((e.loaded * 100) / e.total)
+          dispatch(setUploadProgress(percent))
+        },
+      })
+
+      // file replace → 202 + poll
+      if (data?.status === 'processing' && data?.videoId) {
+        dispatch(setUploadProgress(100))
+        return await pollVideoUploadUntilDone(data.videoId, {
+          pollAfterMs: data?.pollAfterMs,
+        })
+      }
+
       return data
     } catch (e) {
       return toReject(e, rejectWithValue)

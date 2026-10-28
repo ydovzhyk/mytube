@@ -112,6 +112,24 @@ export const axiosDeleteVideo = async (params) => {
   return data
 }
 
+export const axiosGetManageVideo = async (videoId) => {
+  const id = String(videoId || '').trim()
+  if (!id) throw new Error('Video id is required')
+  const { data } = await instance.get(`/videos/${id}/manage`)
+  return data
+}
+
+export const axiosUpdateVideo = async (videoId, formData, { onUploadProgress } = {}) => {
+  const id = String(videoId || '').trim()
+  if (!id) throw new Error('Video id is required')
+  const { data, status } = await instance.patch(`/videos/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress,
+    timeout: UPLOAD_TRANSFER_TIMEOUT_MS,
+  })
+  return { ...data, __httpStatus: status }
+}
+
 export const axiosVideoView = async (videoId) => {
   const id = String(videoId || '').trim()
   if (!id) throw new Error('Video id is required')

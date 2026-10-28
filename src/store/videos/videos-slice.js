@@ -8,6 +8,8 @@ import {
   getWatchVideo,
   getSimilarVideos,
   deleteVideo,
+  getManageVideo,
+  updateVideo,
   reactVideo,
   searchVideos,
 } from './videos-operations'
@@ -18,6 +20,7 @@ const initialState = {
   loading: false,
   uploadLoading: false,
   uploadProgress: 0,
+  manageVideo: null,
   showPlaylist: true,
 
   videos: [],
@@ -323,9 +326,60 @@ const videos = createSlice({
       .addCase(deleteVideo.fulfilled, (state, { payload }) => {
         state.loading = false
         state.message = okMsg(payload, 'Video deleted')
+        const deletedId = String(payload?.videoId || payload?.video?._id || '')
+        if (deletedId) {
+          state.channelVideos.items = (state.channelVideos.items || []).filter(
+            (v) => String(v?._id) !== deletedId
+          )
+          state.videos = (state.videos || []).filter((v) => String(v?._id) !== deletedId)
+          if (String(state.watch?.currentVideo?._id) === deletedId) {
+            state.watch.currentVideo = null
+          }
+          if (String(state.manageVideo?._id) === deletedId) {
+            state.manageVideo = null
+          }
+        }
       })
       .addCase(deleteVideo.rejected, (state, { payload }) => {
         state.loading = false
+        state.error = errMsg(payload)
+      })
+
+      .addCase(getManageVideo.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(getManageVideo.fulfilled, (state, { payload }) => {
+        state.loading = false
+        state.manageVideo = payload?.video || null
+      })
+      .addCase(getManageVideo.rejected, (state, { payload }) => {
+        state.loading = false
+        state.manageVideo = null
+        state.error = errMsg(payload)
+      })
+
+      .addCase(updateVideo.pending, (state) => {
+        state.uploadLoading = true
+        state.error = null
+        state.message = null
+        state.uploadProgress = 0
+      })
+      .addCase(updateVideo.fulfilled, (state, { payload }) => {
+        state.uploadLoading = false
+        state.uploadProgress = 100
+        state.message = okMsg(payload, 'Video updated')
+        const updated = payload?.video || null
+        if (updated?._id) {
+          state.manageVideo = updated
+          state.channelVideos.items = (state.channelVideos.items || []).map((v) =>
+            String(v?._id) === String(updated._id) ? { ...v, ...updated } : v
+          )
+        }
+      })
+      .addCase(updateVideo.rejected, (state, { payload }) => {
+        state.uploadLoading = false
+        state.uploadProgress = 0
         state.error = errMsg(payload)
       })
 

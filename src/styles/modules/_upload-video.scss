@@ -12,6 +12,21 @@
   max-width: 720px;
   margin: 0 auto;
 
+  &__nav {
+    margin-bottom: $spacing-4;
+  }
+
+  &__back {
+    color: $text-secondary;
+    text-decoration: none;
+    font-size: $text-sm;
+
+    &:hover {
+      color: $text-primary;
+      text-decoration: underline;
+    }
+  }
+
   &__title {
     margin-bottom: $spacing-2;
   }
@@ -19,6 +34,48 @@
   &__subtitle {
     margin-bottom: $spacing-6;
     color: $text-secondary;
+  }
+}
+
+.edit-video-preview {
+  margin-bottom: $spacing-5;
+
+  img {
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    border-radius: $radius-md;
+    background: $bg-tertiary;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-2 $spacing-3;
+    margin-top: $spacing-2;
+    font-size: $text-sm;
+    color: $text-secondary;
+  }
+
+  &__status {
+    font-weight: $font-medium;
+    text-transform: capitalize;
+
+    &--ready {
+      color: #16a34a;
+    }
+
+    &--processing {
+      color: #ca8a04;
+    }
+
+    &--failed {
+      color: #dc2626;
+    }
+  }
+
+  &__error {
+    color: #dc2626;
   }
 }
 
