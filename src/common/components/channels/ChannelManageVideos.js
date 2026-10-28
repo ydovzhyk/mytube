@@ -17,6 +17,7 @@ import { resetChannelVideos } from '@/store/videos/videos-slice'
 
 import T from '@/common/shared/i18n/T'
 import Button from '@/common/shared/button/Button'
+import ConfirmModal from '@/common/shared/modal/ConfirmModal'
 import { useTranslate } from '@/utils/translating/translating'
 
 const LIMIT = 20
@@ -54,6 +55,7 @@ export default function ChannelManageVideos({ channel }) {
   const [query, setQuery] = useState('')
   const [queryDebounced, setQueryDebounced] = useState('')
   const [deletingId, setDeletingId] = useState(null)
+  const [pendingDelete, setPendingDelete] = useState(null)
 
   const placeholderSearch = useTranslate('Search in this channel')
 
@@ -120,23 +122,33 @@ export default function ChannelManageVideos({ channel }) {
     return () => io.disconnect()
   }, [dispatch, channelId, sort, queryDebounced, page, hasMore, isFetching])
 
-  const onDelete = async (video) => {
+  const openDeleteModal = (video) => {
     const id = String(video?._id || '')
     if (!id || deletingId) return
+    setPendingDelete(video)
+  }
 
-    const title = String(video?.title || 'this video')
-    const ok = window.confirm(`Delete "${title}"? This cannot be undone.`)
-    if (!ok) return
+  const closeDeleteModal = () => {
+    if (deletingId) return
+    setPendingDelete(null)
+  }
+
+  const confirmDelete = async () => {
+    const id = String(pendingDelete?._id || '')
+    if (!id || deletingId) return
 
     try {
       setDeletingId(id)
       await dispatch(deleteVideo({ videoId: id })).unwrap()
+      setPendingDelete(null)
     } catch {
       // toast via ToastListener
     } finally {
       setDeletingId(null)
     }
   }
+
+  const pendingTitle = String(pendingDelete?.title || 'this video')
 
   return (
     <section className="manage-videos">
@@ -251,7 +263,7 @@ export default function ChannelManageVideos({ channel }) {
                   <button
                     type="button"
                     className="manage-video-row__delete"
-                    onClick={() => onDelete(video)}
+                    onClick={() => openDeleteModal(video)}
                     disabled={busy || isFetching}
                     title="Delete video"
                   >
@@ -272,6 +284,18 @@ export default function ChannelManageVideos({ channel }) {
       </div>
 
       <div ref={sentinelRef} style={{ height: 1 }} />
+
+      <ConfirmModal
+        open={Boolean(pendingDelete)}
+        title="Delete video"
+        message={`Delete "${pendingTitle}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        danger
+        busy={Boolean(deletingId)}
+        onCancel={closeDeleteModal}
+        onConfirm={confirmDelete}
+      />
     </section>
   )
 }
