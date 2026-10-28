@@ -271,12 +271,15 @@
 .manage-videos {
   @include flex-column;
   gap: $spacing-5;
+  position: relative;
+  z-index: 0;
 
   &__head {
     @include flex-between;
     gap: $spacing-4;
     flex-wrap: wrap;
     align-items: flex-start;
+    margin-bottom: $spacing-1;
   }
 
   &__title {
@@ -292,6 +295,9 @@
   }
 
   &__uploadLink {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
     text-decoration: none;
   }
 

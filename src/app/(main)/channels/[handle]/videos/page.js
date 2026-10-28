@@ -26,7 +26,7 @@ export default function ManageChannelVideosPage() {
 
   if (!handle) {
     return (
-      <div className="channels-page">
+      <div className="channels-page channels-page--under-header">
         <p>
           <T>Channel handle is missing</T>
         </p>
@@ -36,7 +36,7 @@ export default function ManageChannelVideosPage() {
 
   if (!channel) {
     return (
-      <div className="channels-page">
+      <div className="channels-page channels-page--under-header">
         <p>
           <T>Channel not found</T> (@{handle})
         </p>
@@ -48,7 +48,7 @@ export default function ManageChannelVideosPage() {
   }
 
   return (
-    <div className="channels-page">
+    <div className="channels-page channels-page--under-header">
       <ChannelManageVideos channel={channel} />
     </div>
   )

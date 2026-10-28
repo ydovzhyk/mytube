@@ -4,6 +4,12 @@
 .channels-page {
   margin-top: -12px;
   padding: $spacing-6;
+
+  // under sticky ChannelsHeader — don't pull content under the tabs bar
+  &--under-header {
+    margin-top: 0;
+    padding-top: $spacing-8;
+  }
 }
 
 .channel-card {
